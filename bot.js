@@ -36,26 +36,23 @@ registerTokenTypeActions(bot);
 
 bot.start((ctx) => {
   ctx.reply(
-    `👋 Welcome to the Sol Wallet Manager Bot!\n\n` +
+    `👋 Welcome to your SolMate\n\n` +
     `📋 <b>Main Menu</b>\n\n` +
     `Use the buttons below to navigate through the available features:`,
     {
       parse_mode: 'HTML',
       reply_markup: {
         inline_keyboard: [
-          [
-            { text: '💳 Generate Wallets', callback_data: 'menu_generate_wallets' },
-            { text: '📜 My Wallets', callback_data: 'menu_my_wallets' },
-          ],
-          [
-            { text: '💸 Distribute Tokens', callback_data: 'menu_distribute_tokens' },
-            { text: 'ℹ️ Help', callback_data: 'menu_help' },
-          ],
+          [{ text: '💳 Generate Wallets', callback_data: 'menu_generate_wallets' }],
+          [{ text: '📜 My Wallets', callback_data: 'menu_my_wallets' }],
+          [{ text: '💸 Distribute Tokens', callback_data: 'menu_distribute_tokens' }],
+          [{ text: 'ℹ️ Help', callback_data: 'menu_help' }],
         ]
       }
     }
   );
 });
+
 
 handleGenerateWallets(bot);
 
@@ -69,9 +66,17 @@ registerHelpMenu(bot);
 
 bot.action('menu_main', (ctx) => handleBackToMainMenu(ctx));
 
+// Log that the bot is starting
+console.log('✅ Solmate is successfully running!');
+
 // Launch the bot
-bot.launch();
+bot.launch()
+  .catch((error) => {
+    console.error('❌ Failed to launch the bot:', error);
+  });
 
 // Handle graceful shutdown
 process.on('SIGINT', () => bot.stop('SIGINT'));
 process.on('SIGTERM', () => bot.stop('SIGTERM'));
+
+
