@@ -7,7 +7,7 @@ const { Markup } = require('telegraf');
 function registerHelpMenu(bot) {
   bot.action('menu_help', async (ctx) => {
     const helpMessage = await ctx.reply(
-      `ℹ️ <b>How to Use This Bot:</b>\n\n` +
+      `ℹ️ <b>How to Use Your Solmate:</b>\n\n` +
       `1️⃣ Use "💳 Generate Wallets" to create wallets.\n` +
       `2️⃣ Use "📜 My Wallets" to manage wallets.\n` +
       `3️⃣ Use "💸 Distribute Tokens" to send SOL or SPL tokens to your wallets.\n\n` +
