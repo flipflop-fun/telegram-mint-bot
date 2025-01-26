@@ -45,25 +45,26 @@ async function saveWalletsToFile(wallett,file,telegramUserId){
 
 // Handle "Generate Wallets" Menu and Logic
 function handleGenerateWallets(bot) {
-    const activeListeners = new Set(); 
+    const activeListeners = new Set();
 
     bot.action('menu_generate_wallets', (ctx) => {
         ctx.reply(
             `Select the number of wallets to generate:`,
-            Markup.inlineKeyboard([
-                [
-                    Markup.button.callback('1 Wallet 💳', 'generate_1'),
-                    Markup.button.callback('5 Wallets 💳', 'generate_5'),
-                ],
-                [
-                    Markup.button.callback('10 Wallets 💳', 'generate_10'),
-                    Markup.button.callback('50 Wallets 💳', 'generate_50'),
-                ],
-                [
-                    Markup.button.callback('Custom (Max 100) 💳', 'generate_custom'),
-                    Markup.button.callback('🔙 Back to Main Menu', 'menu_main'),
-                ],
-            ])
+            {
+                parse_mode: 'HTML',
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: '1 Wallet 💳', callback_data: 'generate_1' }],
+                        [{ text: '5 Wallets 💳', callback_data: 'generate_5' }],
+                        [{ text: '10 Wallets 💳', callback_data: 'generate_10' }],
+                        [{ text: '20 Wallets 💳', callback_data: 'generate_20' }],
+                        [
+                            { text: 'Custom (Max 50) 💳', callback_data: 'generate_custom' },
+                            { text: '🔙 Back to Main Menu', callback_data: 'menu_main' },
+                        ],
+                    ]
+                }
+            }
         );
     });
 
