@@ -1,13 +1,13 @@
-const { Scenes, Markup } = require('telegraf');
-const { getUserWallets } = require('../../services/db');
-const { distributeSol } = require('./distributeSol');
-const { handleBackToMainMenu } = require('../../utils/bot/navigation');
-const { fetchMultipleSolBalances } = require('../../services/viewBalances'); 
+import { Scenes, Markup } from 'telegraf';
+import { getUserWallets } from '../../services/db';
+import { distributeSol } from './distributeSol';
+import { handleBackToMainMenu } from '../../utils/bot/navigation';
+import { fetchMultipleSolBalances } from '../../services/viewBalances';
 
 const distributeSolWizard = new Scenes.WizardScene(
   'distribute_sol_wizard',
   // Step 1: Choose distribution mode
-  async (ctx) => {
+  async (ctx: any) => {
     if (ctx.callbackQuery?.data === 'menu_main') {
       await handleBackToMainMenu(ctx);
       return ctx.scene.leave();
@@ -24,7 +24,7 @@ const distributeSolWizard = new Scenes.WizardScene(
     return ctx.wizard.next();
   },
   // Step 2: Handle mode-specific logic
-  async (ctx) => {
+  async (ctx: any) => {
     if (ctx.callbackQuery?.data === 'menu_main') {
       await handleBackToMainMenu(ctx);
       return ctx.scene.leave();
@@ -33,14 +33,12 @@ const distributeSolWizard = new Scenes.WizardScene(
     const mode = ctx.callbackQuery?.data.replace('mode_', '');
     ctx.wizard.state.mode = mode;
 
-    const userId = ctx.from.id;
+    const userId = ctx.from.id as number;
     const wallets = getUserWallets(userId);
 
     if (!wallets || wallets.length === 0) {
       await ctx.reply('❌ No wallets found.', {
-        reply_markup: Markup.inlineKeyboard([
-          [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')],
-        ]).reply_markup,
+        reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
       });
       return ctx.scene.leave();
     }
@@ -48,26 +46,28 @@ const distributeSolWizard = new Scenes.WizardScene(
     ctx.wizard.state.wallets = wallets;
 
     // Fetch balances for all wallets
-    const walletAddresses = wallets.map((wallet) => wallet.address);
+    const walletAddresses = wallets.map((wallet: any) => wallet.address);
     const balances = await fetchMultipleSolBalances(walletAddresses);
 
     const msg = 'Select a wallet to send SOL FROM:';
     await ctx.reply(msg, {
       reply_markup: Markup.inlineKeyboard(
-        balances.map((wallet, index) => {
-          const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
-          const balance = wallet.solBalance.toFixed(4); // Show balance up to 4 decimal places
-          return [
-            Markup.button.callback(`${index + 1}. ${shortAddress}`, `select_sender_${wallet.address}`),
-            Markup.button.callback(`💰 ${balance} SOL`, `balance_${wallet.address}`),
-          ];
-        }).concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
+        balances
+          .map((wallet: any, index: number) => {
+            const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
+            const balance = wallet.solBalance.toFixed(4); // Show balance up to 4 decimal places
+            return [
+              Markup.button.callback(`${index + 1}. ${shortAddress}`, `select_sender_${wallet.address}`),
+              Markup.button.callback(`💰 ${balance} SOL`, `balance_${wallet.address}`),
+            ];
+          })
+          .concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
       ).reply_markup,
     });
     return ctx.wizard.next();
   },
   // Step 3: Handle recipient wallets
-  async (ctx) => {
+  async (ctx: any) => {
     if (ctx.callbackQuery?.data === 'menu_main') {
       await handleBackToMainMenu(ctx);
       return ctx.scene.leave();
@@ -77,37 +77,37 @@ const distributeSolWizard = new Scenes.WizardScene(
       const senderWallet = ctx.callbackQuery.data.replace('select_sender_', '');
       ctx.wizard.state.senderWallet = senderWallet;
 
-      const wallets = ctx.wizard.state.wallets.filter((wallet) => wallet.address !== senderWallet);
+      const wallets = ctx.wizard.state.wallets.filter((wallet: any) => wallet.address !== senderWallet);
 
       if (ctx.wizard.state.mode === 'even') {
         const msg =
           `✅ Sender Wallet: ${senderWallet}\n\n` +
           'Enter the total amount of SOL to distribute evenly across all recipient wallets:';
         await ctx.reply(msg, {
-          reply_markup: Markup.inlineKeyboard([
-            [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')],
-          ]).reply_markup,
+          reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
         });
         return ctx.wizard.next();
       }
 
-      const walletAddresses = wallets.map((wallet) => wallet.address);
+      const walletAddresses = wallets.map((wallet: any) => wallet.address);
       const balances = await fetchMultipleSolBalances(walletAddresses);
 
       const msg = 'Select a wallet to send SOL TO:';
       await ctx.reply(msg, {
         reply_markup: Markup.inlineKeyboard(
-          balances.map((wallet, index) => {
-            const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
-            const balance = wallet.solBalance.toFixed(4);
-            return [
-              Markup.button.callback(`${index + 1}. ${shortAddress}`, `select_recipient_${wallet.address}`),
-              Markup.button.callback(`💰 ${balance} SOL`, `balance_${wallet.address}`),
-            ];
-          }).concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
+          balances
+            .map((wallet: any, index: number) => {
+              const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
+              const balance = wallet.solBalance.toFixed(4);
+              return [
+                Markup.button.callback(`${index + 1}. ${shortAddress}`, `select_recipient_${wallet.address}`),
+                Markup.button.callback(`💰 ${balance} SOL`, `balance_${wallet.address}`),
+              ];
+            })
+            .concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
         ).reply_markup,
       });
-      return; 
+      return;
     }
 
     if (ctx.callbackQuery?.data?.startsWith('select_recipient_')) {
@@ -119,21 +119,17 @@ const distributeSolWizard = new Scenes.WizardScene(
         `✅ Recipient Wallet:\n${ctx.wizard.state.recipientWallet}\n\n` +
         'Enter the amount of SOL to send (e.g., 0.5, 1, 1.345):';
       await ctx.reply(msg, {
-        reply_markup: Markup.inlineKeyboard([
-          [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')],
-        ]).reply_markup,
+        reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
       });
       return ctx.wizard.next();
     }
 
     await ctx.reply('❌ Please select a wallet.', {
-      reply_markup: Markup.inlineKeyboard([
-        [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')],
-      ]).reply_markup,
+      reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
     });
   },
   // Step 4: Finalize and process the transaction
-  async (ctx) => {
+  async (ctx: any) => {
     if (ctx.callbackQuery?.data === 'menu_main') {
       await handleBackToMainMenu(ctx);
       return ctx.scene.leave();
@@ -159,6 +155,4 @@ const distributeSolWizard = new Scenes.WizardScene(
   }
 );
 
-module.exports = {
-  distributeSolWizard,
-};
+export { distributeSolWizard };

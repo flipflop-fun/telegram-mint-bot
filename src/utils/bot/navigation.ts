@@ -1,13 +1,12 @@
-const { Markup } = require('telegraf');
+import { Markup } from 'telegraf';
 
 /**
  * Handle navigation back to the main menu.
- * @param {Object} ctx 
  */
-async function handleBackToMainMenu(ctx) {
+export async function handleBackToMainMenu(ctx: any) {
   ctx.reply(
     `📋 <b>Main Menu</b>\n\n` +
-    `Use the buttons below to navigate through the available features:`,
+      `Use the buttons below to navigate through the available features:`,
     {
       parse_mode: 'HTML',
       reply_markup: {
@@ -20,10 +19,8 @@ async function handleBackToMainMenu(ctx) {
             { text: '💸 Distribute Tokens', callback_data: 'menu_distribute_tokens' },
             { text: 'ℹ️ Help', callback_data: 'menu_help' },
           ],
-        ]
-      }
+        ],
+      },
     }
   );
 }
-
-module.exports = { handleBackToMainMenu };

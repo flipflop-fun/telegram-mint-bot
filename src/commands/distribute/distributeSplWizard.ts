@@ -1,39 +1,37 @@
-const { Scenes, Markup } = require('telegraf');
-const { getUserWallets } = require('../../services/db');
-const { distributeSpl } = require('./distributeSpl');
-const { handleBackToMainMenu } = require('../../utils/bot/navigation');
-const { fetchSingleSplTokenBalances } = require('../../services/viewBalances');
+import { Scenes, Markup } from 'telegraf';
+import { getUserWallets } from '../../services/db';
+import { distributeSpl } from './distributeSpl';
+import { handleBackToMainMenu } from '../../utils/bot/navigation';
+import { fetchSingleSplTokenBalances } from '../../services/viewBalances';
 
 const distributeSplWizard = new Scenes.WizardScene(
   'distribute_spl_wizard',
   // Step 1: Select the wallet to distribute from
-  async (ctx) => {
+  async (ctx: any) => {
     try {
-      const userId = ctx.from.id;
+      const userId = ctx.from.id as number;
       const wallets = getUserWallets(userId);
       ctx.wizard.state.wallets = wallets;
 
       if (!wallets || wallets.length === 0) {
         await ctx.reply('❌ No wallets found.', {
-          reply_markup: Markup.inlineKeyboard([
-            [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]
-          ]).reply_markup,
+          reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
         });
         return ctx.scene.leave();
       }
 
       await ctx.reply('Select a wallet to distribute tokens from:', {
         reply_markup: Markup.inlineKeyboard(
-          wallets.map((wallet) => {
-            const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
-            return [Markup.button.callback(`🔑 ${shortAddress}`, `select_sender_${wallet.address}`)];
-          }).concat([
-            [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]
-          ])
+          wallets
+            .map((wallet: any) => {
+              const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
+              return [Markup.button.callback(`🔑 ${shortAddress}`, `select_sender_${wallet.address}`)];
+            })
+            .concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
         ).reply_markup,
       });
       return ctx.wizard.next();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in Step 1:', error.message);
       await ctx.reply('❌ An error occurred. Please try again.');
       return ctx.scene.leave();
@@ -41,16 +39,16 @@ const distributeSplWizard = new Scenes.WizardScene(
   },
 
   // Step 2: Fetch SPL Token Balances and Ask for Contract Address
-async (ctx) => {
-  try {
+  async (ctx: any) => {
+    try {
       if (ctx.callbackQuery?.data === 'menu_main') {
-          await handleBackToMainMenu(ctx);
-          return ctx.scene.leave();
+        await handleBackToMainMenu(ctx);
+        return ctx.scene.leave();
       }
 
       if (!ctx.callbackQuery?.data.startsWith('select_sender_')) {
-          await ctx.reply('❌ Please select a wallet to distribute tokens from.');
-          return;
+        await ctx.reply('❌ Please select a wallet to distribute tokens from.');
+        return;
       }
 
       const senderWallet = ctx.callbackQuery.data.replace('select_sender_', '');
@@ -61,55 +59,42 @@ async (ctx) => {
       const splTokens = await fetchSingleSplTokenBalances(senderWallet);
 
       if (splTokens.length === 0) {
-          await ctx.reply(
-              '❌ This wallet does not hold any SPL tokens. Please select another wallet:',
-              {
-                  reply_markup: Markup.inlineKeyboard(
-                      ctx.wizard.state.wallets
-                          .filter((wallet) => wallet.address !== senderWallet) 
-                          .map((wallet) => {
-                              const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
-                              return [
-                                  Markup.button.callback(
-                                      `🔑 ${shortAddress}`,
-                                      `select_sender_${wallet.address}`
-                                  ),
-                              ];
-                          }).concat([
-                              [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')],
-                          ])
-                  ).reply_markup,
-              }
-          );
-          return; 
+        await ctx.reply('❌ This wallet does not hold any SPL tokens. Please select another wallet:', {
+          reply_markup: Markup.inlineKeyboard(
+            ctx.wizard.state.wallets
+              .filter((wallet: any) => wallet.address !== senderWallet)
+              .map((wallet: any) => {
+                const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
+                return [Markup.button.callback(`🔑 ${shortAddress}`, `select_sender_${wallet.address}`)];
+              })
+              .concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
+          ).reply_markup,
+        });
+        return;
       }
 
       ctx.wizard.state.splTokens = splTokens;
 
       await ctx.reply('🪙 Choose the SPL Token Contract Address or enter it manually:', {
-          reply_markup: Markup.inlineKeyboard(
-              splTokens.map((token) => {
-                  const shortMint = `${token.mint.slice(0, 3)}...${token.mint.slice(-4)}`;
-                  return [
-                      Markup.button.callback(
-                          `💳 ${shortMint} (${token.balance})`,
-                          `select_token_${token.mint}`
-                      ),
-                  ];
-              }).concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
-          ).reply_markup,
+        reply_markup: Markup.inlineKeyboard(
+          splTokens
+            .map((token: any) => {
+              const shortMint = `${token.mint.slice(0, 3)}...${token.mint.slice(-4)}`;
+              return [Markup.button.callback(`💳 ${shortMint} (${token.balance})`, `select_token_${token.mint}`)];
+            })
+            .concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
+        ).reply_markup,
       });
       return ctx.wizard.next();
-  } catch (error) {
+    } catch (error: any) {
       console.error('Error in Step 2:', error.message);
       await ctx.reply('❌ An error occurred. Please try again.');
       return ctx.scene.leave();
-  }
-},
-
+    }
+  },
 
   // Step 3: Choose SPL Token Contract Address or Manual Entry
-  async (ctx) => {
+  async (ctx: any) => {
     try {
       if (ctx.callbackQuery?.data === 'menu_main') {
         await handleBackToMainMenu(ctx);
@@ -134,7 +119,7 @@ async (ctx) => {
         ]).reply_markup,
       });
       return ctx.wizard.next();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in Step 3:', error.message);
       await ctx.reply('❌ An error occurred. Please try again.');
       return ctx.scene.leave();
@@ -142,7 +127,7 @@ async (ctx) => {
   },
 
   // Step 4: Handle mode-specific logic
-  async (ctx) => {
+  async (ctx: any) => {
     try {
       if (ctx.callbackQuery?.data === 'menu_main') {
         await handleBackToMainMenu(ctx);
@@ -152,17 +137,15 @@ async (ctx) => {
       const mode = ctx.callbackQuery?.data.replace('mode_', '');
       ctx.wizard.state.mode = mode;
 
-      const wallets = ctx.wizard.state.wallets.filter((wallet) => wallet.address !== ctx.wizard.state.senderWallet);
+      const wallets = ctx.wizard.state.wallets.filter((wallet: any) => wallet.address !== ctx.wizard.state.senderWallet);
 
       if (mode === 'even') {
-        ctx.wizard.state.recipients = wallets.map((wallet) => wallet.address);
+        ctx.wizard.state.recipients = wallets.map((wallet: any) => wallet.address);
         const msg =
           `✅ Sender Wallet: ${ctx.wizard.state.senderWallet}\n\n` +
           `Enter the total amount of SPL Tokens to distribute evenly across ${wallets.length} wallets:`;
         await ctx.reply(msg, {
-          reply_markup: Markup.inlineKeyboard([
-            [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]
-          ]).reply_markup,
+          reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
         });
 
         return ctx.wizard.next();
@@ -170,20 +153,17 @@ async (ctx) => {
         const msg = 'Select a recipient wallet for SPL Tokens:';
         await ctx.reply(msg, {
           reply_markup: Markup.inlineKeyboard(
-            wallets.map((wallet) => {
-              const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
-              return [
-                Markup.button.callback(
-                  `🔑 ${shortAddress}`,
-                  `select_recipient_${wallet.address}`
-                ),
-              ];
-            }).concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
+            wallets
+              .map((wallet: any) => {
+                const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
+                return [Markup.button.callback(`🔑 ${shortAddress}`, `select_recipient_${wallet.address}`)];
+              })
+              .concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
           ).reply_markup,
         });
         return ctx.wizard.next();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in Step 4:', error.message);
       await ctx.reply('❌ An error occurred. Please try again.');
       return ctx.scene.leave();
@@ -192,7 +172,7 @@ async (ctx) => {
 
   // Step 5: For even mode, handle user input for total amount
   // For single mode, handle recipient selection
-  async (ctx) => {
+  async (ctx: any) => {
     try {
       if (ctx.callbackQuery?.data === 'menu_main') {
         await handleBackToMainMenu(ctx);
@@ -212,7 +192,7 @@ async (ctx) => {
           return;
         }
 
-        const recipients = ctx.wizard.state.recipients.map((address) => ({
+        const recipients = ctx.wizard.state.recipients.map((address: string) => ({
           wallet: address,
           amount: totalAmount / ctx.wizard.state.recipients.length,
         }));
@@ -232,32 +212,25 @@ async (ctx) => {
             `Enter the amount of tokens to send:`;
 
           await ctx.reply(msg, {
-            reply_markup: Markup.inlineKeyboard([
-              [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]
-            ]).reply_markup,
+            reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
           });
           return ctx.wizard.next();
         } else {
           await ctx.reply('❌ Please select a recipient wallet.');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in Step 5:', error.message);
       await ctx.reply('❌ An error occurred. Please try again.');
       return ctx.scene.leave();
     }
   },
 
-  // Step 6: For single mode, handle the amount input
-  async (ctx) => {
+  // Step 6: For single mode, handle token amount input
+  async (ctx: any) => {
     try {
-      if (ctx.callbackQuery?.data === 'menu_main') {
-        await handleBackToMainMenu(ctx);
-        return ctx.scene.leave();
-      }
-
       if (!ctx.message?.text) {
-        await ctx.reply('❌ Please enter a valid amount.');
+        await ctx.reply('❌ Please enter a valid input.');
         return;
       }
 
@@ -269,10 +242,11 @@ async (ctx) => {
       }
 
       ctx.wizard.state.amount = amount;
+
       await distributeSpl(ctx);
       await handleBackToMainMenu(ctx);
-      ctx.scene.leave();
-    } catch (error) {
+      return ctx.scene.leave();
+    } catch (error: any) {
       console.error('Error in Step 6:', error.message);
       await ctx.reply('❌ An error occurred. Please try again.');
       return ctx.scene.leave();
@@ -280,6 +254,4 @@ async (ctx) => {
   }
 );
 
-module.exports = {
-  distributeSplWizard,
-};
+export { distributeSplWizard };

