@@ -103,13 +103,10 @@ export async function handleMintDataAddressInput(ctx: any) {
 
   try {
     // Get mint information using FlipFlop SDK
-    console.log(`📍 Testing with mint address: ${mintAddress}`);
-    console.log(`🔗 Using RPC: ${RPC}`);
     const response = await getMintData({
       rpc: RPC,
       mint: mintAddress
     });
-    console.log('✅ getMintData response:', JSON.stringify(response, null, 2));
     
     // Check if the response is successful
     if (!response.success || !response.data) {
@@ -134,7 +131,7 @@ export async function handleMintDataAddressInput(ctx: any) {
       // `${t('mint_data.is_mutable')} ${mintInfo.isMutable ? '✅' : '❌'}`;
 
     const explorerUrl = `https://explorer.solana.com/address/${mintAddress}${RPC.includes("devnet") ? "?cluster=devnet" : ""}`;
-    console.log(`🔗 Explorer URL: ${explorerUrl}`);
+
     await safeEditOrReply(ctx, dataText, {
       parse_mode: 'HTML',
       reply_markup: Markup.inlineKeyboard([

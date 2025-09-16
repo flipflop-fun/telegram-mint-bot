@@ -250,5 +250,6 @@
   "send.error_blockhash": "❌ Transaction échouée : Congestion du réseau, veuillez réessayer plus tard.\n\nDétails de l'erreur : {error}",
   "send.error_simulation_failed": "❌ Simulation de transaction échouée, possiblement due à des problèmes de réseau ou un solde insuffisant.\n\nDétails de l'erreur : {error}",
   "send.error_general": "❌ Transaction échouée : {error}\n\nVeuillez vérifier votre connexion réseau et le solde de votre portefeuille avant de réessayer.",
-  "send.error_signature_expired": "❌ La signature de transaction a expiré, veuillez relancer la transaction"
+  "send.error_signature_expired": "❌ La signature de transaction a expiré, veuillez relancer la transaction",
+  "send.insufficient_balance_details": "❌ Solde Insuffisant\n\n🏦 Portefeuille Expéditeur : <code>{senderAddress}</code>\n💰 Solde Actuel : {currentBalance} SOL\n📍 Adresse Destinataire : <code>{recipientAddress}</code>\n💸 Montant Requis : {amount} SOL\n⛽ Frais Estimés : {fee} SOL\n📊 Total Requis : {totalRequired} SOL\n\nAssurez-vous que le portefeuille sélectionné dispose de suffisamment de SOL pour la transaction et les frais."
 }

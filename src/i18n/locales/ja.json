@@ -250,5 +250,6 @@
   "send.error_blockhash": "❌ 取引失敗：ネットワークの混雑、後でもう一度お試しください。\n\nエラー詳細: {error}",
   "send.error_simulation_failed": "❌ 取引シミュレーション失敗、ネットワークの問題または残高不足の可能性があります。\n\nエラー詳細: {error}",
   "send.error_general": "❌ 取引失敗: {error}\n\n再試行する前にネットワーク接続とウォレット残高を確認してください。",
-  "send.error_signature_expired": "❌ 取引署名が期限切れです。取引を再開してください"
+  "send.error_signature_expired": "❌ 取引署名が期限切れです。取引を再開してください",
+  "send.insufficient_balance_details": "❌ 残高不足\n\n🏦 送信ウォレット: <code>{senderAddress}</code>\n💰 現在の残高: {currentBalance} SOL\n📍 受信アドレス: <code>{recipientAddress}</code>\n💸 必要金額: {amount} SOL\n⛽ 推定手数料: {fee} SOL\n📊 合計必要額: {totalRequired} SOL\n\n選択したウォレットに取引と手数料に十分なSOLがあることを確認してください。"
 }

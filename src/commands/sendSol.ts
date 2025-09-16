@@ -277,14 +277,14 @@ export async function handleSendSolConfirm(ctx: any) {
       const balanceInSol = balance / LAMPORTS_PER_SOL;
       const requiredInSol = (lamports + estimatedFee) / LAMPORTS_PER_SOL;
       await ctx.editMessageText(
-        `❌ 余额不足\n\n` +
-        `🏦 发送钱包: <code>${userState.senderWallet.address}</code>\n` +
-        `💰 当前余额: ${balanceInSol.toFixed(6)} SOL\n` +
-        `📍 接收地址: <code>${userState.recipientAddress}</code>\n` +
-        `💸 需要金额: ${userState.amount} SOL\n` +
-        `⛽ 预估手续费: ${(estimatedFee / LAMPORTS_PER_SOL).toFixed(6)} SOL\n` +
-        `📊 总计需要: ${requiredInSol.toFixed(6)} SOL\n\n` +
-        `请确保选择的钱包有足够的SOL用于交易和手续费。`,
+        t('send.insufficient_balance_details', {
+          senderAddress: userState.senderWallet.address,
+          currentBalance: balanceInSol.toFixed(6),
+          recipientAddress: userState.recipientAddress,
+          amount: userState.amount,
+          fee: (estimatedFee / LAMPORTS_PER_SOL).toFixed(6),
+          totalRequired: requiredInSol.toFixed(6)
+        }),
         { parse_mode: 'HTML' }
       );
       userStates.delete(userId);

@@ -250,5 +250,6 @@
   "send.error_blockhash": "❌ 交易失败：网络拥堵，请稍后重试。\n\n错误详情: {error}",
   "send.error_simulation_failed": "❌ 交易模拟失败，可能是网络问题或余额不足。\n\n错误详情: {error}",
   "send.error_general": "❌ 交易失败：{error}\n\n请检查网络连接和钱包余额后重试。",
-  "send.error_signature_expired": "❌ 交易签名已过期，请重新发起交易"
+  "send.error_signature_expired": "❌ 交易签名已过期，请重新发起交易",
+  "send.insufficient_balance_details": "❌ 余额不足\n\n🏦 发送钱包: <code>{senderAddress}</code>\n💰 当前余额: {currentBalance} SOL\n📍 接收地址: <code>{recipientAddress}</code>\n💸 需要金额: {amount} SOL\n⛽ 预估手续费: {fee} SOL\n📊 总计需要: {totalRequired} SOL\n\n请确保选择的钱包有足够的SOL用于交易和手续费。"
 }

@@ -249,6 +249,7 @@
   "buttons.try_again": "🔄 Intentar Nuevamente",
   "send.error_blockhash": "❌ Transacción fallida: Congestión de red, por favor intente más tarde.\n\nDetalles del error: {error}",
   "send.error_simulation_failed": "❌ Simulación de transacción fallida, posiblemente debido a problemas de red o saldo insuficiente.\n\nDetalles del error: {error}",
-  "send.error_general": "❌ Transacción fallida: {error}\n\nPor favor verifique su conexión de red y saldo de cartera antes de reintentar.",
-  "send.error_signature_expired": "❌ La firma de transacción ha expirado, por favor inicie la transacción nuevamente"
+  "send.error_general": "❌ Transacción fallida: {error}\n\nPor favor verifica tu conexión de red y saldo del monedero antes de reintentar.",
+  "send.error_signature_expired": "❌ La firma de transacción ha expirado, por favor inicia la transacción nuevamente",
+  "send.insufficient_balance_details": "❌ Saldo Insuficiente\n\n🏦 Monedero Remitente: <code>{senderAddress}</code>\n💰 Saldo Actual: {currentBalance} SOL\n📍 Dirección Destinatario: <code>{recipientAddress}</code>\n💸 Cantidad Necesaria: {amount} SOL\n⛽ Comisión Estimada: {fee} SOL\n📊 Total Requerido: {totalRequired} SOL\n\nAsegúrate de que el monedero seleccionado tenga suficiente SOL para la transacción y las comisiones."
 }

@@ -250,5 +250,6 @@
   "send.error_blockhash": "❌ Giao dịch thất bại: Mạng bị tắc nghẽn, vui lòng thử lại sau.\n\nChi tiết lỗi: {error}",
   "send.error_simulation_failed": "❌ Mô phỏng giao dịch thất bại, có thể do vấn đề mạng hoặc số dư không đủ.\n\nChi tiết lỗi: {error}",
   "send.error_general": "❌ Giao dịch thất bại: {error}\n\nVui lòng kiểm tra kết nối mạng và số dư ví trước khi thử lại.",
-  "send.error_signature_expired": "❌ Chữ ký giao dịch đã hết hạn, vui lòng khởi tạo giao dịch lại"
+  "send.error_signature_expired": "❌ Chữ ký giao dịch đã hết hạn, vui lòng khởi tạo giao dịch lại",
+  "send.insufficient_balance_details": "❌ Số Dư Không Đủ\n\n🏦 Ví Gửi: <code>{senderAddress}</code>\n💰 Số Dư Hiện Tại: {currentBalance} SOL\n📍 Địa Chỉ Nhận: <code>{recipientAddress}</code>\n💸 Số Tiền Cần: {amount} SOL\n⛽ Phí Ước Tính: {fee} SOL\n📊 Tổng Cần: {totalRequired} SOL\n\nVui lòng đảm bảo ví đã chọn có đủ SOL cho giao dịch và phí."
 }

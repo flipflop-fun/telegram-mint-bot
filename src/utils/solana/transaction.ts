@@ -23,12 +23,10 @@ export async function sendTransaction(
   transaction.sign(signers);
   const signature = await connection.sendTransaction(transaction, { preflightCommitment: 'confirmed' });
   
-  // 改进交易确认逻辑
   try {
     const confirmation = await connection.confirmTransaction(signature, 'confirmed');
     console.log('Tx confirmation: ', confirmation);
     
-    // 检查交易是否真的成功
     if (confirmation.value.err) {
       throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
     }
@@ -37,7 +35,6 @@ export async function sendTransaction(
   } catch (confirmError) {
     console.error('Error while confirming transaction:', confirmError);
     
-    // 即使确认失败，也检查交易是否实际成功
     try {
       const txStatus = await connection.getSignatureStatus(signature);
       console.log('Checking transaction status:', txStatus);
@@ -50,7 +47,6 @@ export async function sendTransaction(
       console.error('Error while checking transaction status:', statusError);
     }
     
-    // 如果确认失败且无法验证交易状态，抛出原始错误
     throw confirmError;
   }
 }

@@ -250,5 +250,6 @@
   "send.error_blockhash": "❌ Transaction failed: Network congestion, please try again later.\n\nError details: {error}",
   "send.error_simulation_failed": "❌ Transaction simulation failed, possibly due to network issues or insufficient balance.\n\nError details: {error}",
   "send.error_general": "❌ Transaction failed: {error}\n\nPlease check your network connection and wallet balance before retrying.",
-  "send.error_signature_expired": "❌ Transaction signature has expired, please initiate the transaction again"
+  "send.error_signature_expired": "❌ Transaction signature has expired, please initiate the transaction again",
+  "send.insufficient_balance_details": "❌ Insufficient Balance\n\n🏦 Sender Wallet: <code>{senderAddress}</code>\n💰 Current Balance: {currentBalance} SOL\n📍 Recipient Address: <code>{recipientAddress}</code>\n💸 Amount Needed: {amount} SOL\n⛽ Estimated Fee: {fee} SOL\n📊 Total Required: {totalRequired} SOL\n\nPlease ensure the selected wallet has enough SOL for the transaction and fees."
 }
