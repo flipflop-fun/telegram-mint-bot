@@ -30,6 +30,25 @@ const distributeSolWizard = new Scenes.WizardScene(
       return ctx.scene.leave();
     }
 
+    const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+    const msg = t('sol.mode_title');
+    await ctx.reply(msg, {
+      reply_markup: Markup.inlineKeyboard([
+        [Markup.button.callback(t('sol.mode_even'), 'mode_even')],
+        [Markup.button.callback(t('sol.mode_single'), 'mode_single')],
+        [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')],
+      ]).reply_markup,
+    });
+    return ctx.wizard.next();
+  },
+  // Step 2: Handle mode-specific logic
+  async (ctx: any) => {
+    if (ctx.callbackQuery?.data === 'menu_main') {
+      await handleBackToMainMenu(ctx);
+      return ctx.scene.leave();
+    }
+
+    const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
     const mode = ctx.callbackQuery?.data.replace('mode_', '');
     ctx.wizard.state.mode = mode;
 
@@ -37,8 +56,8 @@ const distributeSolWizard = new Scenes.WizardScene(
     const wallets = getUserWallets(userId);
 
     if (!wallets || wallets.length === 0) {
-      await ctx.reply('❌ No wallets found.', {
-        reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
+      await ctx.reply(t('sol.no_wallets'), {
+        reply_markup: Markup.inlineKeyboard([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]]).reply_markup,
       });
       return ctx.scene.leave();
     }
@@ -49,7 +68,7 @@ const distributeSolWizard = new Scenes.WizardScene(
     const walletAddresses = wallets.map((wallet: any) => wallet.address);
     const balances = await fetchMultipleSolBalances(walletAddresses);
 
-    const msg = 'Select a wallet to send SOL FROM:';
+    const msg = t('sol.select_sender');
     await ctx.reply(msg, {
       reply_markup: Markup.inlineKeyboard(
         balances
@@ -58,10 +77,10 @@ const distributeSolWizard = new Scenes.WizardScene(
             const balance = wallet.solBalance.toFixed(4); // Show balance up to 4 decimal places
             return [
               Markup.button.callback(`${index + 1}. ${shortAddress}`, `select_sender_${wallet.address}`),
-              Markup.button.callback(`💰 ${balance} SOL`, `balance_${wallet.address}`),
+              Markup.button.callback(`💰 ${balance} ${t('units.sol')}`, `balance_${wallet.address}`),
             ];
           })
-          .concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
+          .concat([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]])
       ).reply_markup,
     });
     return ctx.wizard.next();
@@ -73,6 +92,8 @@ const distributeSolWizard = new Scenes.WizardScene(
       return ctx.scene.leave();
     }
 
+    const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+
     if (ctx.callbackQuery?.data?.startsWith('select_sender_')) {
       const senderWallet = ctx.callbackQuery.data.replace('select_sender_', '');
       ctx.wizard.state.senderWallet = senderWallet;
@@ -81,10 +102,10 @@ const distributeSolWizard = new Scenes.WizardScene(
 
       if (ctx.wizard.state.mode === 'even') {
         const msg =
-          `✅ Sender Wallet: ${senderWallet}\n\n` +
-          'Enter the total amount of SOL to distribute evenly across all recipient wallets:';
+          `✅ ${t('common.sender_wallet')}: ${senderWallet}\n\n` +
+          t('sol.enter_total');
         await ctx.reply(msg, {
-          reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
+          reply_markup: Markup.inlineKeyboard([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]]).reply_markup,
         });
         return ctx.wizard.next();
       }
@@ -92,7 +113,7 @@ const distributeSolWizard = new Scenes.WizardScene(
       const walletAddresses = wallets.map((wallet: any) => wallet.address);
       const balances = await fetchMultipleSolBalances(walletAddresses);
 
-      const msg = 'Select a wallet to send SOL TO:';
+      const msg = t('sol.select_recipient');
       await ctx.reply(msg, {
         reply_markup: Markup.inlineKeyboard(
           balances
@@ -101,10 +122,10 @@ const distributeSolWizard = new Scenes.WizardScene(
               const balance = wallet.solBalance.toFixed(4);
               return [
                 Markup.button.callback(`${index + 1}. ${shortAddress}`, `select_recipient_${wallet.address}`),
-                Markup.button.callback(`💰 ${balance} SOL`, `balance_${wallet.address}`),
+                Markup.button.callback(`💰 ${balance} ${t('units.sol')}`, `balance_${wallet.address}`),
               ];
             })
-            .concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
+            .concat([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]])
         ).reply_markup,
       });
       return;
@@ -115,17 +136,17 @@ const distributeSolWizard = new Scenes.WizardScene(
       ctx.wizard.state.recipientWallet = recipientWallet;
 
       const msg =
-        `✅ Sender Wallet:\n${ctx.wizard.state.senderWallet}\n\n` +
-        `✅ Recipient Wallet:\n${ctx.wizard.state.recipientWallet}\n\n` +
-        'Enter the amount of SOL to send (e.g., 0.5, 1, 1.345):';
+        `✅ ${t('common.sender_wallet')}:\n${ctx.wizard.state.senderWallet}\n\n` +
+        `✅ ${t('common.recipient_wallet')}:\n${ctx.wizard.state.recipient_wallet || recipientWallet}\n\n` +
+        t('sol.enter_amount');
       await ctx.reply(msg, {
-        reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
+        reply_markup: Markup.inlineKeyboard([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]]).reply_markup,
       });
       return ctx.wizard.next();
     }
 
-    await ctx.reply('❌ Please select a wallet.', {
-      reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
+    await ctx.reply(t('common.select_wallet'), {
+      reply_markup: Markup.inlineKeyboard([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]]).reply_markup,
     });
   },
   // Step 4: Finalize and process the transaction
@@ -135,15 +156,17 @@ const distributeSolWizard = new Scenes.WizardScene(
       return ctx.scene.leave();
     }
 
+    const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+
     if (!ctx.message?.text) {
-      await ctx.reply('❌ Please enter a valid input.');
+      await ctx.reply(t('common.invalid_input'));
       return;
     }
 
     const amount = parseFloat(ctx.message.text);
 
     if (isNaN(amount) || amount <= 0) {
-      await ctx.reply('❌ Invalid amount. Please enter a valid number greater than 0.');
+      await ctx.reply(t('common.invalid_amount'));
       return;
     }
 

@@ -9,31 +9,33 @@ const distributeSplWizard = new Scenes.WizardScene(
   // Step 1: Select the wallet to distribute from
   async (ctx: any) => {
     try {
+      const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
       const userId = ctx.from.id as number;
       const wallets = getUserWallets(userId);
       ctx.wizard.state.wallets = wallets;
 
       if (!wallets || wallets.length === 0) {
-        await ctx.reply('❌ No wallets found.', {
-          reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
+        await ctx.reply(t('sol.no_wallets'), {
+          reply_markup: Markup.inlineKeyboard([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]]).reply_markup,
         });
         return ctx.scene.leave();
       }
 
-      await ctx.reply('Select a wallet to distribute tokens from:', {
+      await ctx.reply(t('spl.select_sender'), {
         reply_markup: Markup.inlineKeyboard(
           wallets
             .map((wallet: any) => {
               const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
               return [Markup.button.callback(`🔑 ${shortAddress}`, `select_sender_${wallet.address}`)];
             })
-            .concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
+            .concat([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]])
         ).reply_markup,
       });
       return ctx.wizard.next();
     } catch (error: any) {
       console.error('Error in Step 1:', error.message);
-      await ctx.reply('❌ An error occurred. Please try again.');
+      const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+      await ctx.reply(t('common.error_try_again'));
       return ctx.scene.leave();
     }
   },
@@ -41,25 +43,26 @@ const distributeSplWizard = new Scenes.WizardScene(
   // Step 2: Fetch SPL Token Balances and Ask for Contract Address
   async (ctx: any) => {
     try {
+      const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
       if (ctx.callbackQuery?.data === 'menu_main') {
         await handleBackToMainMenu(ctx);
         return ctx.scene.leave();
       }
 
       if (!ctx.callbackQuery?.data.startsWith('select_sender_')) {
-        await ctx.reply('❌ Please select a wallet to distribute tokens from.');
+        await ctx.reply(t('spl.select_sender'));
         return;
       }
 
       const senderWallet = ctx.callbackQuery.data.replace('select_sender_', '');
       ctx.wizard.state.senderWallet = senderWallet;
 
-      await ctx.reply('⏳ Fetching tokens for the selected wallet...');
+      await ctx.reply(t('spl.fetching_tokens'));
 
       const splTokens = await fetchSingleSplTokenBalances(senderWallet);
 
       if (splTokens.length === 0) {
-        await ctx.reply('❌ This wallet does not hold any SPL tokens. Please select another wallet:', {
+        await ctx.reply(t('spl.no_tokens_wallet'), {
           reply_markup: Markup.inlineKeyboard(
             ctx.wizard.state.wallets
               .filter((wallet: any) => wallet.address !== senderWallet)
@@ -67,7 +70,7 @@ const distributeSplWizard = new Scenes.WizardScene(
                 const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
                 return [Markup.button.callback(`🔑 ${shortAddress}`, `select_sender_${wallet.address}`)];
               })
-              .concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
+              .concat([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]])
           ).reply_markup,
         });
         return;
@@ -75,20 +78,21 @@ const distributeSplWizard = new Scenes.WizardScene(
 
       ctx.wizard.state.splTokens = splTokens;
 
-      await ctx.reply('🪙 Choose the SPL Token Contract Address or enter it manually:', {
+      await ctx.reply(t('spl.choose_token_or_manual'), {
         reply_markup: Markup.inlineKeyboard(
           splTokens
             .map((token: any) => {
               const shortMint = `${token.mint.slice(0, 3)}...${token.mint.slice(-4)}`;
               return [Markup.button.callback(`💳 ${shortMint} (${token.balance})`, `select_token_${token.mint}`)];
             })
-            .concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
+            .concat([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]])
         ).reply_markup,
       });
       return ctx.wizard.next();
     } catch (error: any) {
       console.error('Error in Step 2:', error.message);
-      await ctx.reply('❌ An error occurred. Please try again.');
+      const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+      await ctx.reply(t('common.error_try_again'));
       return ctx.scene.leave();
     }
   },
@@ -96,6 +100,7 @@ const distributeSplWizard = new Scenes.WizardScene(
   // Step 3: Choose SPL Token Contract Address or Manual Entry
   async (ctx: any) => {
     try {
+      const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
       if (ctx.callbackQuery?.data === 'menu_main') {
         await handleBackToMainMenu(ctx);
         return ctx.scene.leave();
@@ -107,21 +112,22 @@ const distributeSplWizard = new Scenes.WizardScene(
       } else if (ctx.message?.text) {
         ctx.wizard.state.tokenMint = ctx.message.text.trim();
       } else {
-        await ctx.reply('❌ Please select or enter a valid SPL Token Contract Address.');
+        await ctx.reply(t('spl.select_token_prompt'));
         return;
       }
 
-      await ctx.reply('🔄 Select a distribution mode:', {
+      await ctx.reply(t('spl.mode_title'), {
         reply_markup: Markup.inlineKeyboard([
-          [Markup.button.callback('Even Distribution', 'mode_even')],
-          [Markup.button.callback('Single Transfer', 'mode_single')],
-          [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')],
+          [Markup.button.callback(t('spl.mode_even'), 'mode_even')],
+          [Markup.button.callback(t('spl.mode_single'), 'mode_single')],
+          [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')],
         ]).reply_markup,
       });
       return ctx.wizard.next();
     } catch (error: any) {
       console.error('Error in Step 3:', error.message);
-      await ctx.reply('❌ An error occurred. Please try again.');
+      const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+      await ctx.reply(t('common.error_try_again'));
       return ctx.scene.leave();
     }
   },
@@ -129,6 +135,7 @@ const distributeSplWizard = new Scenes.WizardScene(
   // Step 4: Handle mode-specific logic
   async (ctx: any) => {
     try {
+      const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
       if (ctx.callbackQuery?.data === 'menu_main') {
         await handleBackToMainMenu(ctx);
         return ctx.scene.leave();
@@ -142,15 +149,15 @@ const distributeSplWizard = new Scenes.WizardScene(
       if (mode === 'even') {
         ctx.wizard.state.recipients = wallets.map((wallet: any) => wallet.address);
         const msg =
-          `✅ Sender Wallet: ${ctx.wizard.state.senderWallet}\n\n` +
-          `Enter the total amount of SPL Tokens to distribute evenly across ${wallets.length} wallets:`;
+          `✅ ${t('common.sender_wallet')}: ${ctx.wizard.state.senderWallet}\n\n` +
+          t('spl.enter_total', { count: wallets.length });
         await ctx.reply(msg, {
-          reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
+          reply_markup: Markup.inlineKeyboard([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]]).reply_markup,
         });
 
         return ctx.wizard.next();
       } else if (mode === 'single') {
-        const msg = 'Select a recipient wallet for SPL Tokens:';
+        const msg = t('spl.select_recipient');
         await ctx.reply(msg, {
           reply_markup: Markup.inlineKeyboard(
             wallets
@@ -158,14 +165,15 @@ const distributeSplWizard = new Scenes.WizardScene(
                 const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
                 return [Markup.button.callback(`🔑 ${shortAddress}`, `select_recipient_${wallet.address}`)];
               })
-              .concat([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]])
+              .concat([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]])
           ).reply_markup,
         });
         return ctx.wizard.next();
       }
     } catch (error: any) {
       console.error('Error in Step 4:', error.message);
-      await ctx.reply('❌ An error occurred. Please try again.');
+      const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+      await ctx.reply(t('common.error_try_again'));
       return ctx.scene.leave();
     }
   },
@@ -174,6 +182,7 @@ const distributeSplWizard = new Scenes.WizardScene(
   // For single mode, handle recipient selection
   async (ctx: any) => {
     try {
+      const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
       if (ctx.callbackQuery?.data === 'menu_main') {
         await handleBackToMainMenu(ctx);
         return ctx.scene.leave();
@@ -181,14 +190,14 @@ const distributeSplWizard = new Scenes.WizardScene(
 
       if (ctx.wizard.state.mode === 'even') {
         if (!ctx.message?.text) {
-          await ctx.reply('❌ Please enter a valid total amount.');
+          await ctx.reply(t('common.invalid_input'));
           return;
         }
 
         const totalAmount = parseFloat(ctx.message.text);
 
         if (isNaN(totalAmount) || totalAmount <= 0) {
-          await ctx.reply('❌ Invalid amount. Please enter a valid number greater than 0.');
+          await ctx.reply(t('common.invalid_amount'));
           return;
         }
 
@@ -207,21 +216,22 @@ const distributeSplWizard = new Scenes.WizardScene(
           ctx.wizard.state.recipientWallet = recipientWallet;
 
           const msg =
-            `✅ Sender Wallet:\n${ctx.wizard.state.senderWallet}\n\n` +
-            `✅ Recipient Wallet:\n${ctx.wizard.state.recipientWallet}\n\n` +
-            `Enter the amount of tokens to send:`;
+            `✅ ${t('common.sender_wallet')}:\n${ctx.wizard.state.senderWallet}\n\n` +
+            `✅ ${t('common.recipient_wallet')}:\n${ctx.wizard.state.recipientWallet}\n\n` +
+            t('spl.enter_amount');
 
           await ctx.reply(msg, {
-            reply_markup: Markup.inlineKeyboard([[Markup.button.callback('🔙 Back to Main Menu', 'menu_main')]]).reply_markup,
+            reply_markup: Markup.inlineKeyboard([[Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]]).reply_markup,
           });
           return ctx.wizard.next();
         } else {
-          await ctx.reply('❌ Please select a recipient wallet.');
+          await ctx.reply(t('common.select_wallet'));
         }
       }
     } catch (error: any) {
       console.error('Error in Step 5:', error.message);
-      await ctx.reply('❌ An error occurred. Please try again.');
+      const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+      await ctx.reply(t('common.error_try_again'));
       return ctx.scene.leave();
     }
   },
@@ -229,15 +239,16 @@ const distributeSplWizard = new Scenes.WizardScene(
   // Step 6: For single mode, handle token amount input
   async (ctx: any) => {
     try {
+      const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
       if (!ctx.message?.text) {
-        await ctx.reply('❌ Please enter a valid input.');
+        await ctx.reply(t('common.invalid_input'));
         return;
       }
 
       const amount = parseFloat(ctx.message.text);
 
       if (isNaN(amount) || amount <= 0) {
-        await ctx.reply('❌ Invalid amount. Please enter a valid number greater than 0.');
+        await ctx.reply(t('common.invalid_amount'));
         return;
       }
 
@@ -248,7 +259,8 @@ const distributeSplWizard = new Scenes.WizardScene(
       return ctx.scene.leave();
     } catch (error: any) {
       console.error('Error in Step 6:', error.message);
-      await ctx.reply('❌ An error occurred. Please try again.');
+      const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+      await ctx.reply(t('common.error_try_again'));
       return ctx.scene.leave();
     }
   }

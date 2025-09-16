@@ -24,6 +24,7 @@ function createSolTransferInstructions(
 }
 
 export async function distributeSol(ctx: any) {
+  const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   try {
     const connection = new Connection(MAINNET);
     const userId = ctx.from.id as number;
@@ -33,7 +34,7 @@ export async function distributeSol(ctx: any) {
     );
 
     if (!senderWallet || !senderWallet.private_key) {
-      await ctx.reply('❌ Unable to find the private key for the selected wallet.');
+      await ctx.reply(t('common.private_key_not_found'));
       return ctx.scene.leave();
     }
 
@@ -44,7 +45,7 @@ export async function distributeSol(ctx: any) {
       const inputAmount = parseFloat(ctx.message.text);
 
       if (isNaN(inputAmount) || inputAmount <= 0) {
-        await ctx.reply('❌ Invalid amount. Please enter a valid number greater than 0.');
+        await ctx.reply(t('common.invalid_amount'));
         return;
       }
 
@@ -55,22 +56,19 @@ export async function distributeSol(ctx: any) {
         lamports,
       });
 
-      await ctx.reply('⏳ Sending SOL, please wait...');
+      await ctx.reply(t('sol.sending'));
 
       const transaction = await createTransaction(connection, senderKeypair.publicKey, [instruction]);
       const signature = await sendTransaction(connection, transaction, [senderKeypair]);
 
       const explorerUrl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
-      const successMessage =
-        `<b>Transaction Successful!</b>\n\n` +
-        `<b>Tx Hash:</b> <a href="${explorerUrl}">${signature}</a>\n\n` +
-        `You can verify this transaction on the Solana Explorer`;
+      const successMessage = t('tx.success_html', { explorer_url: explorerUrl, signature });
 
       await ctx.reply(successMessage, {
         parse_mode: 'HTML',
         reply_markup: Markup.inlineKeyboard([
-          [Markup.button.callback('🔙 Back to Menu', 'menu_main')],
-          [Markup.button.callback('📜 My Wallets', 'menu_my_wallets')],
+          [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')],
+          [Markup.button.callback(t('buttons.my_wallets'), 'menu_my_wallets')],
         ]),
       });
 
@@ -83,17 +81,17 @@ export async function distributeSol(ctx: any) {
     );
 
     if (recipientWallets.length === 0) {
-      await ctx.reply('❌ No wallets found to distribute to.');
+      await ctx.reply(t('sol.no_wallets'));
       return ctx.scene.leave();
     }
 
     const amount = ctx.wizard.state.amount as number;
     if (isNaN(amount) || amount <= 0) {
-      await ctx.reply('❌ Invalid amount. Please enter a valid number greater than 0.');
+      await ctx.reply(t('common.invalid_amount'));
       return;
     }
 
-    await ctx.reply('⏳ Distributing SOL evenly, please wait...');
+    await ctx.reply(t('sol.distributing'));
 
     const totalLamports = BigInt(Math.floor(amount * 1e9));
     const numRecipients = BigInt(recipientWallets.length);
@@ -111,27 +109,22 @@ export async function distributeSol(ctx: any) {
     const signature = await sendTransaction(connection, transaction, [senderKeypair]);
 
     const explorerUrl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
-    const successMessage =
-      `<b>Transaction Successful!</b>\n\n` +
-      `<b>Tx Hash:</b> <a href="${explorerUrl}">${signature}</a>\n\n` +
-      `You can verify this transaction on the Solana Explorer`;
+    const successMessage = t('tx.success_html', { explorer_url: explorerUrl, signature });
 
     await ctx.reply(successMessage, {
       parse_mode: 'HTML',
       reply_markup: Markup.inlineKeyboard([
-        [Markup.button.callback('🔙 Back to Menu', 'menu_main')],
-        [Markup.button.callback('📜 My Wallets', 'menu_my_wallets')],
+        [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')],
+        [Markup.button.callback(t('buttons.my_wallets'), 'menu_my_wallets')],
       ]),
     });
   } catch (error: any) {
     console.error('Error during SOL distribution:', error.message);
 
     if (error.message.includes('insufficient lamports')) {
-      await ctx.reply(
-        '❌ Transaction failed due to insufficient funds in the sender wallet. Please ensure you have enough SOL to cover the transaction amount and fees.'
-      );
+      await ctx.reply(t('errors.insufficient_funds_sol'));
     } else {
-      await ctx.reply('❌ An error occurred during distribution. Please try again.');
+      await ctx.reply(t('common.error_try_again'));
     }
   } finally {
     return ctx.scene.leave();

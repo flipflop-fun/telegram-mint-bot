@@ -1,7 +1,7 @@
 import { db, getUserWallets, removeWallet, getWalletCount } from '../services/db';
 import { Markup } from 'telegraf';
 import { generateWallets, saveWalletsToDatabase } from './generateWallets';
-import { viewBalances } from '../services/viewBalances';
+import { viewBalances, fetchMultipleSolBalances } from '../services/viewBalances';
 import { chunkArray, createPaginationKeyboard } from '../utils/bot/pagination';
 import { handleBackToMainMenu } from '../utils/bot/navigation';
 
@@ -9,17 +9,18 @@ const MAX_SPL_TOKENS_DISPLAY = 1;
 
 export async function handleMyWallets(ctx: any, page = 1, isEdit = false) {
     const userId = ctx.from.id as number;
+    const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
 
-    const fetchingMessage = await ctx.reply('⏳ Fetching your wallets and balances, please wait...');
+    const fetchingMessage = await ctx.reply(t('wallets.fetching'));
 
     const wallets = getUserWallets(userId);
 
     if (!wallets || wallets.length === 0) {
-        const noWalletMessage = '🪙 You have not generated any wallets yet. Use "💳 Generate Wallets" to create new wallets';
+        const noWalletMessage = t('wallets.none');
 
         const keyboard = Markup.inlineKeyboard([
-            [Markup.button.callback('💳 Generate Wallets', 'menu_generate_wallets')],
-            [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')],
+            [Markup.button.callback(t('buttons.generate_wallets'), 'menu_generate_wallets')],
+            [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')],
         ]);
 
         if (isEdit) {
@@ -45,7 +46,7 @@ export async function handleMyWallets(ctx: any, page = 1, isEdit = false) {
     const balances = await viewBalances(userId);
 
     if (!Array.isArray(balances)) {
-        const errorMessage = '❌ Error fetching wallet balances. Please try again later';
+        const errorMessage = t('wallets.error_balances');
         await ctx.reply(errorMessage, {
             parse_mode: 'HTML',
         });
@@ -56,9 +57,9 @@ export async function handleMyWallets(ctx: any, page = 1, isEdit = false) {
     const lines: string[] = [];
     const timestamp = new Date().toLocaleTimeString();
 
-    lines.push(`📄 Showing ${currentWallets.length} of ${wallets.length} wallets on page ${page} of ${totalPages}`);
+    lines.push(t('wallets.showing', { count: currentWallets.length, total: wallets.length, page, pages: totalPages }));
     lines.push('');
-    lines.push(`🔄 Last refreshed at ${timestamp}`);
+    lines.push(t('wallets.last_refreshed', { time: timestamp }));
     lines.push('');
 
     const separator = '━━━━━━━━━━━━━━━━━━━━━━━━━━━';
@@ -67,20 +68,20 @@ export async function handleMyWallets(ctx: any, page = 1, isEdit = false) {
         const walletIndex = page > 1 ? (page - 1) * itemsPerPage + index + 1 : index + 1;
         const address = wallet.address;
 
-        let walletText = `<b>${walletIndex}. Wallet</b>: <code>${address}</code>\n`;
+        let walletText = `<b>${walletIndex}. ${t('labels.wallet')}</b>: <code>${address}</code>\n`;
 
         const walletBalance = balances.find((b: any) => b.address === wallet.address);
         const { splTokens = [] } = walletBalance || {};
 
         if (splTokens.length > 0) {
-            walletText += `\n<b>SPL Tokens</b>:`;
+            walletText += `\n<b>${t('labels.spl_tokens')}</b>:`;
             splTokens.slice(0, MAX_SPL_TOKENS_DISPLAY).forEach(({ mint, balance }: any) => {
-                walletText += `\n<b>CA</b>: <code>${mint}</code>\n<b>Balance</b>: ${balance}`;
+                walletText += `\n<b>${t('labels.ca')}</b>: <code>${mint}</code>\n<b>${t('labels.balance')}</b>: ${balance}`;
             });
 
             if (splTokens.length > MAX_SPL_TOKENS_DISPLAY) {
                 const additionalTokensCount = splTokens.length - MAX_SPL_TOKENS_DISPLAY;
-                walletText += `\n<b>+${additionalTokensCount} more tokens</b>`;
+                walletText += `\n<b>${t('wallets.more_tokens', { count: additionalTokensCount })}</b>`;
             }
         }
 
@@ -94,21 +95,28 @@ export async function handleMyWallets(ctx: any, page = 1, isEdit = false) {
     const walletButtons = currentWallets.map((wallet: any, index: number) => {
         const shortAddress = `...${wallet.address.slice(-4)}`;
         const walletBalance = balances.find((b: any) => b.address === wallet.address);
-        const solBalance = walletBalance ? walletBalance.solBalance.toFixed(4) : 'N/A';
+        
+        // Ensure proper formatting of SOL balance
+        let solBalance: string;
+        if (walletBalance && typeof walletBalance.solBalance === 'number') {
+            solBalance = walletBalance.solBalance.toFixed(4);
+        } else {
+            solBalance = t('common.na');
+        }
 
         return [
             Markup.button.callback(`🔑 ${shortAddress}`, `view_key_${wallet.address}`),
-            Markup.button.callback(`💰 ${solBalance} SOL`, `balance_${wallet.address}`),
-            Markup.button.callback('🔍 SPL Tokens', `view_all_tokens_${wallet.address}`),
-            Markup.button.callback('🗑️ Remove', `remove_wallet_${wallet.address}`),
+            Markup.button.callback(`💰 ${solBalance} ${t('units.sol')}`, `balance_${wallet.address}`),
+            Markup.button.callback(t('buttons.view_all_tokens'), `view_all_tokens_${wallet.address}`),
+            Markup.button.callback(t('buttons.remove'), `remove_wallet_${wallet.address}`),
         ];
     });
 
-    const paginationButtons = createPaginationKeyboard(page, totalPages, 'my_wallets_page_');
+    const paginationButtons = createPaginationKeyboard(ctx, page, totalPages, 'my_wallets_page_');
     const footerButtons = [
-        [Markup.button.callback('🔄 Refresh', `refresh_wallets_page_${page}`)],
-        [Markup.button.callback('➕ Add New Wallet', 'add_new_wallet')],
-        [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')],
+        [Markup.button.callback(t('buttons.refresh'), `refresh_wallets_page_${page}`)],
+        [Markup.button.callback(t('buttons.add_new_wallet'), 'add_new_wallet')],
+        [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')],
     ];
 
     const inlineKeyboard = [...walletButtons, ...paginationButtons, ...footerButtons];
@@ -131,23 +139,24 @@ export async function handleMyWallets(ctx: any, page = 1, isEdit = false) {
 export async function handleViewAllTokens(ctx: any) {
     const walletAddress = ctx.match[1];
     const userId = ctx.from.id as number;
+    const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
 
     const balances = await viewBalances(userId);
     const walletBalance = balances.find((b: any) => b.address === walletAddress);
 
     if (!walletBalance || walletBalance.splTokens.length === 0) {
-        await ctx.answerCbQuery('❌ No SPL tokens found for this wallet.', { show_alert: true });
+        await ctx.answerCbQuery(t('wallets.no_tokens'), { show_alert: true });
         return;
     }
 
     const tokenLines = walletBalance.splTokens.map(({ mint, balance }: any) => {
-        return `<b>CA</b>: <code>${mint}</code>\n<b>Balance</b>: ${balance}`;
+        return `<b>${t('labels.ca')}</b>: <code>${mint}</code>\n<b>${t('labels.balance')}</b>: ${balance}`;
     });
 
-    const fullTokensMessage = `<b>All SPL Tokens for Wallet:</b>\n<code>${walletAddress}</code>\n\n${tokenLines.join('\n\n')}`;
+    const fullTokensMessage = t('wallets.all_tokens_title', { address: walletAddress, tokens: tokenLines.join('\n\n') });
 
     const closeButton = Markup.inlineKeyboard([
-        [Markup.button.callback('❌ Close', 'close_tokens_message')],
+        [Markup.button.callback(t('buttons.close'), 'close_tokens_message')],
     ]);
 
     const message = await ctx.reply(fullTokensMessage, {
@@ -173,13 +182,15 @@ export async function handleViewKey(ctx: any) {
         .prepare('SELECT private_key FROM wallets WHERE address = ?')
         .get(walletAddress) as WalletRow | undefined;
 
+    const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+
     if (!wallet) {
-        return ctx.answerCbQuery('❌ Wallet not found', { show_alert: true });
+        return ctx.answerCbQuery(t('wallets.not_found'), { show_alert: true });
     }
 
     await ctx.answerCbQuery();
 
-    const message = `🔑 <b>Private Key</b> for wallet <code>${walletAddress}</code>:\n\n<tg-spoiler>${wallet.private_key}</tg-spoiler>`;
+    const message = t('wallets.private_key', { address: walletAddress, private_key: wallet.private_key });
 
     await ctx.reply(message, { parse_mode: 'HTML' });
 }
@@ -188,11 +199,13 @@ export async function handleRemoveWallet(ctx: any) {
     const walletAddress = ctx.match[1];
     const userId = ctx.from.id as number;
 
+    const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+
     if (!removeWallet(userId, walletAddress)) {
-        return ctx.answerCbQuery('❌ Wallet not found or already removed', { show_alert: true });
+        return ctx.answerCbQuery(t('wallets.not_found_or_removed'), { show_alert: true });
     }
 
-    await ctx.answerCbQuery('✅ Wallet removed successfully', { show_alert: true });
+    await ctx.answerCbQuery(t('wallets.removed'), { show_alert: true });
 
     const match = ctx.callbackQuery?.data.match(/^my_wallets_page_(\d+)$/);
     const currentPage = match ? parseInt(match[1], 10) : 1;
@@ -204,8 +217,10 @@ export async function handleAddNewWallet(ctx: any) {
     const userId = ctx.from.id as number;
     const walletCount = getWalletCount(userId);
 
+    const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+
     if (walletCount >= 100) {
-        const limitMessage = '❌ You have reached the maximum limit of 100 wallets';
+        const limitMessage = t('wallets.limit_reached');
         await ctx.reply(limitMessage, { parse_mode: 'HTML' });
         return;
     }
@@ -230,8 +245,24 @@ export function handleWalletPagination(bot: any) {
         await handleMyWallets(ctx, page, true);
     });
 
-    bot.action(/^balance_/, async (ctx: any) => {
-        await ctx.answerCbQuery();
+    bot.action(/^balance_(.+)$/, async (ctx: any) => {
+        const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+        const data = ctx.callbackQuery?.data || '';
+        const match = data.match(/^balance_(.+)$/);
+        const address = match ? match[1] : '';
+        if (!address) {
+            await ctx.answerCbQuery(t('common.error_try_again'), { show_alert: true });
+            return;
+        }
+        try {
+            const [result] = await fetchMultipleSolBalances([address]);
+            const amount = result ? result.solBalance : undefined;
+            const display = typeof amount === 'number' ? amount.toFixed(6) : t('common.na');
+            const message = `${t('labels.balance')}: ${display} ${t('units.sol')}`;
+            await ctx.answerCbQuery(message, { show_alert: true });
+        } catch (e) {
+            await ctx.answerCbQuery(t('common.error_try_again'), { show_alert: true });
+        }
     });
 
     bot.action(/^view_all_tokens_(.+)$/, handleViewAllTokens);

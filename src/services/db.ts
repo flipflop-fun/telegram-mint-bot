@@ -29,7 +29,18 @@ function getWalletCount(userId: number): number {
   return row.count;
 }
 
-// ensure table exists
+// i18n user settings
+function getUserLanguage(userId: number): string | null {
+  const row = db.prepare('SELECT lang FROM user_settings WHERE user_id = ?').get(userId) as { lang: string } | undefined;
+  return row?.lang ?? null;
+}
+
+function setUserLanguage(userId: number, lang: string): void {
+  // user_id is PRIMARY KEY, so INSERT OR REPLACE will upsert
+  db.prepare('INSERT OR REPLACE INTO user_settings (user_id, lang) VALUES (?, ?)').run(userId, lang);
+}
+
+// ensure tables exist
 const init = () => {
   db.prepare(`
     CREATE TABLE IF NOT EXISTS wallets (
@@ -39,7 +50,14 @@ const init = () => {
       user_id INTEGER NOT NULL
     )
   `).run();
+
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS user_settings (
+      user_id INTEGER PRIMARY KEY,
+      lang TEXT NOT NULL
+    )
+  `).run();
 };
 init();
 
-export { db, getUserWallets, removeWallet, getWalletCount };
+export { db, getUserWallets, removeWallet, getWalletCount, getUserLanguage, setUserLanguage };

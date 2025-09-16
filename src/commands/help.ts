@@ -5,23 +5,14 @@ import { Markup } from 'telegraf';
  */
 export function registerHelpMenu(bot: any) {
   bot.action('menu_help', async (ctx: any) => {
-    const helpMessage = await ctx.reply(
-      `ℹ️ <b>How to Use Your Solmate:</b>\n\n` +
-        `1️⃣ Use "💳 Generate Wallets" to create wallets.\n` +
-        `2️⃣ Use "📜 My Wallets" to manage wallets.\n` +
-        `3️⃣ Use "💸 Distribute Tokens" to send SOL or SPL tokens to your wallets.\n\n` +
-        `⚠️ <b>Safety Reminders:</b>\n\n` +
-        `🔒 Keep your private keys private.\n` +
-        `💾 Save your .txt file securely.\n` +
-        `🗑️ Delete the .txt file from the chat history for security.`,
-      {
-        parse_mode: 'HTML',
-        reply_markup: Markup.inlineKeyboard([
-          [Markup.button.callback('🔙 Back to Main Menu', 'menu_main')],
-          [Markup.button.callback('❌ Close', 'close_help_message')],
-        ]).reply_markup,
-      }
-    );
+    const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+    const helpMessage = await ctx.reply(t('help.text'), {
+      parse_mode: 'HTML',
+      reply_markup: Markup.inlineKeyboard([
+        [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')],
+        [Markup.button.callback(t('buttons.close'), 'close_help_message')],
+      ]).reply_markup,
+    });
 
     ctx.session.helpMessageId = helpMessage.message_id;
   });

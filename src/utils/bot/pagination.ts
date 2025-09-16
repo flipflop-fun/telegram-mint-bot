@@ -10,15 +10,16 @@ export function chunkArray<T>(array: T[], size: number): T[][] {
 }
 
 // Creates a pagination keyboard for inline navigation.
-export function createPaginationKeyboard(currentPage: number, totalPages: number, callbackPrefix: string) {
+export function createPaginationKeyboard(ctx: any, currentPage: number, totalPages: number, callbackPrefix: string) {
+  const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string) => k);
   const buttons: any[] = [];
 
   if (currentPage > 1) {
-    buttons.push(Markup.button.callback('⬅️ Previous', `${callbackPrefix}${currentPage - 1}`));
+    buttons.push(Markup.button.callback(t('buttons.previous'), `${callbackPrefix}${currentPage - 1}`));
   }
 
   if (currentPage < totalPages) {
-    buttons.push(Markup.button.callback('➡️ Next', `${callbackPrefix}${currentPage + 1}`));
+    buttons.push(Markup.button.callback(t('buttons.next'), `${callbackPrefix}${currentPage + 1}`));
   }
 
   return buttons.length > 0 ? [buttons] : [];
@@ -39,7 +40,7 @@ export async function sendWalletPage(ctx: any, wallets: { address: string }[], p
     return [Markup.button.callback(`Select (${shortAddress})`, `select_wallet_${wallet.address}`)];
   });
 
-  const paginationButtons = createPaginationKeyboard(page, totalPages, 'wallets_page_');
+  const paginationButtons = createPaginationKeyboard(ctx, page, totalPages, 'wallets_page_');
   const inlineKeyboard = [...walletButtons, ...paginationButtons];
 
   await ctx.reply(message, {
@@ -65,7 +66,7 @@ export async function sendTransactionPage(ctx: any, transactions: string[], page
   const txMessage = txLines.join('\n\n');
   const message = header + txMessage;
 
-  const paginationButtons = createPaginationKeyboard(page, totalPages, 'tx_page_');
+  const paginationButtons = createPaginationKeyboard(ctx, page, totalPages, 'tx_page_');
 
   await ctx.reply(message, {
     parse_mode: 'HTML',
