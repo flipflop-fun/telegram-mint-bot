@@ -13,7 +13,7 @@ import { PublicKey } from '@solana/web3.js';
 
 // Store user states for the mint flow
 const userStates = new Map<number, {
-  step: 'select_action' | 'launch_token' | 'enter_name' | 'enter_symbol' | 'enter_description' | 'enter_image_url' | 'select_token_type' | 'confirm_launch' | 'mint_existing' | 'enter_mint_address' | 'enter_urc' | 'select_minter' | 'confirm_mint';
+  step: 'select_action' | 'launch_token' | 'enter_name' | 'enter_symbol' | 'enter_description' | 'enter_image_url' | 'select_token_type' | 'confirm_launch' | 'mint_existing' | 'enter_mint_address' | 'enter_urc' | 'select_minter' | 'enter_batch_count' | 'confirm_mint' | 'confirm_batch_mint';
   tokenData?: {
     name?: string;
     symbol?: string;
@@ -23,6 +23,14 @@ const userStates = new Map<number, {
     mintAddress?: string;
     urc?: string;
     minterWallet?: { address: string; private_key: string };
+    batchCount?: number;
+  };
+  batchMintResults?: {
+    successful: number;
+    failed: number;
+    total: number;
+    currentIndex: number;
+    results: Array<{ success: boolean; signature?: string; error?: string }>;
   };
 }>();
 
@@ -169,6 +177,33 @@ export async function handleMintTextInput(ctx: any) {
         await showMinterSelection(ctx, userId, t);
         break;
 
+      case 'enter_batch_count':
+        const batchCount = parseInt(text);
+        
+        if (isNaN(batchCount) || batchCount < 1 || batchCount > 10) {
+          await ctx.reply(t('mint.invalid_batch_count'));
+          return;
+        }
+
+        state.tokenData.batchCount = batchCount;
+        state.step = 'confirm_batch_mint';
+
+        const confirmText = t('mint.confirm_batch_mint', {
+          mintAddress: state.tokenData.mintAddress,
+          urc: state.tokenData.urc,
+          wallet: state.tokenData.minterWallet?.address,
+          count: batchCount
+        });
+
+        await ctx.reply(confirmText, {
+          parse_mode: 'HTML',
+          reply_markup: Markup.inlineKeyboard([
+            [Markup.button.callback(t('buttons.confirm_batch_mint'), 'confirm_batch_mint')],
+            [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
+          ]).reply_markup,
+        });
+        break;
+
       default:
         break;
     }
@@ -277,18 +312,10 @@ export async function handleMinterSelection(ctx: any) {
   }
 
   state.tokenData.minterWallet = wallets[walletIndex];
-  state.step = 'confirm_mint';
+  state.step = 'enter_batch_count';
 
-  const confirmText = t('mint.confirm_mint', {
-    mintAddress: state.tokenData.mintAddress,
-    urc: state.tokenData.urc,
-    wallet: state.tokenData.minterWallet.address
-  });
-
-  await ctx.editMessageText(confirmText, {
-    parse_mode: 'HTML',
+  await ctx.editMessageText(t('mint.enter_batch_count'), {
     reply_markup: Markup.inlineKeyboard([
-      [Markup.button.callback(t('buttons.confirm_mint'), 'confirm_token_mint')],
       [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
     ]).reply_markup,
   });
@@ -395,6 +422,129 @@ export async function handleTokenLaunchConfirmation(ctx: any) {
 }
 
 /**
+ * Handle batch mint confirmation
+ */
+export async function handleBatchMint(ctx: any) {
+  const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+  const userId = ctx.from?.id;
+
+  if (!userId) {
+    return;
+  }
+
+  const state = userStates.get(userId);
+  if (!state || !state.tokenData || !state.tokenData.minterWallet) {
+    await ctx.reply(t('common.error_try_again'));
+    return;
+  }
+
+  try {
+    await ctx.editMessageText(t('mint.batch_processing'), {
+      parse_mode: 'HTML',
+    });
+
+    const { mintAddress, urc, minterWallet, batchCount } = state.tokenData;
+    
+    // Initialize batch mint results
+    state.batchMintResults = {
+      successful: 0,
+      failed: 0,
+      total: batchCount || 1,
+      currentIndex: 0,
+      results: []
+    };
+
+    const minter = loadKeypairFromBase58(minterWallet.private_key);
+    
+    for (let i = 0; i < (batchCount || 1); i++) {
+      state.batchMintResults.currentIndex = i + 1;
+      
+      try {
+        const mintOptions: MintTokenOptions = {
+          rpc: RPC,
+          mint: new PublicKey(mintAddress!),
+          urc: urc!,
+          minter,
+        };
+
+        const mintResult = await mintToken(mintOptions);
+
+        if (mintResult.success && mintResult.data) {
+          state.batchMintResults.successful++;
+          state.batchMintResults.results.push({
+            success: true,
+            signature: mintResult.data.tx
+          });
+          
+          // Show individual success message
+          const successMsg = t('mint.batch_success', {
+            index: i + 1,
+            signature: mintResult.data.tx
+          });
+          
+          await ctx.reply(successMsg, { parse_mode: 'HTML' });
+        } else {
+          state.batchMintResults.failed++;
+          state.batchMintResults.results.push({
+            success: false,
+            error: mintResult.message || 'Unknown error'
+          });
+          
+          // Show individual failure message
+          const failMsg = t('mint.batch_failed', {
+            index: i + 1,
+            error: mintResult.message || 'Unknown error'
+          });
+          
+          await ctx.reply(failMsg, { parse_mode: 'HTML' });
+        }
+      } catch (error) {
+        state.batchMintResults.failed++;
+        state.batchMintResults.results.push({
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+        
+        // Show individual error message
+        const errorMsg = t('mint.batch_failed', {
+          index: i + 1,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        });
+        
+        await ctx.reply(errorMsg, { parse_mode: 'HTML' });
+      }
+    }
+
+    // Show final results
+    const completeText = t('mint.batch_complete', {
+      total: state.batchMintResults.total,
+      successful: state.batchMintResults.successful,
+      failed: state.batchMintResults.failed,
+      mintAddress: mintAddress,
+      wallet: minterWallet.address
+    });
+
+    await ctx.reply(completeText, {
+      parse_mode: 'HTML',
+      reply_markup: Markup.inlineKeyboard([
+        [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
+      ]).reply_markup,
+    });
+
+    // Clear user state
+    userStates.delete(userId);
+
+  } catch (error) {
+    console.error('Error in batch mint:', error);
+    await ctx.reply(t('common.error_try_again'), {
+      reply_markup: Markup.inlineKeyboard([
+        [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
+      ]).reply_markup,
+    });
+  }
+}
+
+/**
  * Handle token mint confirmation
  */
 export async function handleTokenMintConfirmation(ctx: any) {
@@ -475,6 +625,7 @@ export function registerMintActions(bot: any) {
   bot.action('token_type_standard', handleTokenTypeSelection);
   bot.action('confirm_token_launch', handleTokenLaunchConfirmation);
   bot.action('confirm_token_mint', handleTokenMintConfirmation);
+  bot.action('confirm_batch_mint', handleBatchMint);
   
   // Handle minter selection
   bot.action(/^select_minter_\d+$/, handleMinterSelection);
