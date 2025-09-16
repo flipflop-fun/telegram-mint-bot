@@ -13,7 +13,6 @@ const userStates = new Map<number, {
   amount?: number;
 }>();
 
-// 临时存储交易签名，避免按钮数据过长
 const transactionSignatures = new Map<string, string>();
 
 /**
@@ -95,7 +94,7 @@ export async function handleSendSolSelectSender(ctx: any) {
   }
 
   const selectedWallet = wallets[walletIndex];
-  console.log(`用户 ${userId} 选择了钱包 ${walletIndex}: ${selectedWallet.address}`);
+  // console.log(`用户 ${userId} 选择了钱包 ${walletIndex}: ${selectedWallet.address}`);
   
   const userState = userStates.get(userId) || { step: 'select_sender' };
   userState.senderWallet = selectedWallet;
@@ -112,11 +111,11 @@ export async function handleSendSolSelectSender(ctx: any) {
   // Set up text message handler for recipient address
   ctx.session = ctx.session || {};
   ctx.session.waitingForSolRecipient = true;
-  console.log(`=== handleSendSolSelectSender调试 ===`);
-  console.log(`用户 ${userId} 选择钱包后设置session状态:`);
-  console.log(`waitingForSolRecipient: ${ctx.session.waitingForSolRecipient}`);
-  console.log(`完整session:`, ctx.session);
-  console.log(`=====================================`);
+  // console.log(`=== handleSendSolSelectSender调试 ===`);
+  // console.log(`用户 ${userId} 选择钱包后设置session状态:`);
+  // console.log(`waitingForSolRecipient: ${ctx.session.waitingForSolRecipient}`);
+  // console.log(`完整session:`, ctx.session);
+  // console.log(`=====================================`);
 }
 
 /**
@@ -264,15 +263,15 @@ export async function handleSendSolConfirm(ctx: any) {
     const feeResponse = await connection.getFeeForMessage(testTransaction.message);
     const estimatedFee = feeResponse.value || 10000; // Fallback to 10000 lamports if estimation fails
     
-    console.log(`=== 发送SOL调试信息 ===`);
-    console.log(`选择的发送钱包地址: ${userState.senderWallet.address}`);
-    console.log(`钱包公钥: ${senderKeypair.publicKey.toBase58()}`);
-    console.log(`钱包余额: ${balance / LAMPORTS_PER_SOL} SOL (${balance} lamports)`);
-    console.log(`要发送金额: ${userState.amount} SOL (${lamports} lamports)`);
-    console.log(`接收地址: ${userState.recipientAddress}`);
-    console.log(`预估手续费: ${estimatedFee / LAMPORTS_PER_SOL} SOL (${estimatedFee} lamports)`);
-    console.log(`总需要: ${(lamports + estimatedFee) / LAMPORTS_PER_SOL} SOL (${lamports + estimatedFee} lamports)`);
-    console.log(`==================`);
+    // console.log(`=== 发送SOL调试信息 ===`);
+    // console.log(`选择的发送钱包地址: ${userState.senderWallet.address}`);
+    // console.log(`钱包公钥: ${senderKeypair.publicKey.toBase58()}`);
+    // console.log(`钱包余额: ${balance / LAMPORTS_PER_SOL} SOL (${balance} lamports)`);
+    // console.log(`要发送金额: ${userState.amount} SOL (${lamports} lamports)`);
+    // console.log(`接收地址: ${userState.recipientAddress}`);
+    // console.log(`预估手续费: ${estimatedFee / LAMPORTS_PER_SOL} SOL (${estimatedFee} lamports)`);
+    // console.log(`总需要: ${(lamports + estimatedFee) / LAMPORTS_PER_SOL} SOL (${lamports + estimatedFee} lamports)`);
+    // console.log(`==================`);
     
     if (balance < lamports + estimatedFee) {
       const balanceInSol = balance / LAMPORTS_PER_SOL;
@@ -335,12 +334,12 @@ export async function handleSendSolConfirm(ctx: any) {
     // 清理用户状态
     userStates.delete(userId);
   } catch (error) {
-    console.error('=== SOL转账错误详情 ===');
-    console.error('错误类型:', error.constructor.name);
-    console.error('错误消息:', error.message);
-    console.error('完整错误:', error);
-    console.error('用户状态:', userState);
-    console.error('========================');
+    // console.error('=== SOL转账错误详情 ===');
+    // console.error('错误类型:', error.constructor.name);
+    // console.error('错误消息:', error.message);
+    // console.error('完整错误:', error);
+    // console.error('用户状态:', userState);
+    // console.error('========================');
     
     let errorMessage = '';
     
@@ -348,11 +347,11 @@ export async function handleSendSolConfirm(ctx: any) {
     if (error.message && error.message.includes('insufficient funds')) {
       errorMessage = t('errors.insufficient_funds_sol');
     } else if (error.message && error.message.includes('blockhash')) {
-      errorMessage = `❌ 交易失败：网络拥堵，请稍后重试。\n\n错误详情: ${error.message}`;
+      errorMessage = t('send.error_blockhash', { error: error.message });
     } else if (error.message && error.message.includes('Transaction simulation failed')) {
-      errorMessage = `❌ 交易模拟失败，可能是网络问题或余额不足。\n\n错误详情: ${error.message}`;
+      errorMessage = t('send.error_simulation_failed', { error: error.message });
     } else {
-      errorMessage = `❌ 交易失败：${error.message || '未知错误'}\n\n请检查网络连接和钱包余额后重试。`;
+      errorMessage = t('send.error_general', { error: error.message || '未知错误' });
     }
     
     await ctx.editMessageText(errorMessage, {
@@ -395,7 +394,7 @@ export async function handleCopyAction(ctx: any) {
       // 清理临时存储
       transactionSignatures.delete(shortId);
     } else {
-      message = '❌ 交易签名已过期，请重新发起交易';
+      message = t('send.error_signature_expired');
     }
   }
 

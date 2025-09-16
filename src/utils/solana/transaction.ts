@@ -26,28 +26,28 @@ export async function sendTransaction(
   // 改进交易确认逻辑
   try {
     const confirmation = await connection.confirmTransaction(signature, 'confirmed');
-    console.log('交易确认结果:', confirmation);
+    console.log('Tx confirmation: ', confirmation);
     
     // 检查交易是否真的成功
     if (confirmation.value.err) {
-      throw new Error(`交易失败: ${JSON.stringify(confirmation.value.err)}`);
+      throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
     }
     
     return signature;
   } catch (confirmError) {
-    console.error('交易确认过程中出错:', confirmError);
+    console.error('Error while confirming transaction:', confirmError);
     
     // 即使确认失败，也检查交易是否实际成功
     try {
       const txStatus = await connection.getSignatureStatus(signature);
-      console.log('交易状态检查:', txStatus);
+      console.log('Checking transaction status:', txStatus);
       
       if (txStatus.value && txStatus.value.confirmationStatus === 'confirmed' && !txStatus.value.err) {
-        console.log('交易实际上已成功，忽略确认错误');
+        console.log('Transaction actually confirmed, ignoring confirmation error');
         return signature;
       }
     } catch (statusError) {
-      console.error('获取交易状态失败:', statusError);
+      console.error('Error while checking transaction status:', statusError);
     }
     
     // 如果确认失败且无法验证交易状态，抛出原始错误

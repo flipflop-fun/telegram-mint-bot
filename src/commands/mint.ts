@@ -102,18 +102,15 @@ export async function handleMintTextInput(ctx: any) {
   const userId = ctx.from?.id;
   const text = ctx.message?.text;
 
-  console.log(`=== handleMintTextInput调试 ===`);
-  console.log(`用户ID: ${userId}, 文本: ${text}`);
-
   if (!userId || !text) {
-    console.log(`handleMintTextInput: 缺少用户ID或文本，退出`);
+    console.log(`handleMintTextInput: user_id or text not exist`);
     return;
   }
 
   const state = userStates.get(userId);
-  console.log(`handleMintTextInput: 用户状态:`, state);
+  console.log(`handleMintTextInput: user status:`, state);
   if (!state || !state.tokenData) {
-    console.log(`handleMintTextInput: 没有mint状态或tokenData，退出`);
+    console.log(`handleMintTextInput: no mint status or tokenData, exit`);
     return;
   }
 
