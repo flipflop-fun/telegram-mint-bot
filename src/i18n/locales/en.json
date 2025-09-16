@@ -121,6 +121,7 @@
   "copy.recipient_copied": "📋 Recipient address copied:",
   "copy.token_copied": "📋 Token address copied:",
   "copy.tx_copied": "📋 Transaction hash copied:",
+  "copy.address_copied": "✅ Address copied!",
   "buttons.confirm": "✅ Confirm",
   "common.error_try_again": "❌ An error occurred. Please try again.",
   "tx.success_html": "🎉 <b>Transaction Successful!</b>\n\n📄 <b>Tx Hash:</b> <a href=\"{explorer_url}\">{signature}</a>\n\nYou can verify this transaction on the Solana Explorer",
@@ -195,9 +196,11 @@
   "mint_data.no_authority": "None",
   "mint_data.fetch_error": "❌ Failed to fetch token data. Please check the address and try again.",
   "mint_data.token_not_found": "❌ Token not found. Please check the address and try again.",
-  "mint_data.copy_mint_feedback": "📋 Token address copied: {address}",
+  "buttons.refresh_data": "🔄 Refresh Data",
   "buttons.copy_mint_address": "📋 Copy Address",
   "buttons.view_on_explorer": "🔍 View on Explorer",
   "buttons.check_another": "🔄 Check Another Token",
-  "buttons.try_again": "🔄 Try Again"
+  "buttons.try_again": "🔄 Try Again",
+  "copy.mint_address_copied": "✅ Token address copied!",
+  "mint_data.copy_mint_feedback": "📋 Token address copied: {address}"
 }

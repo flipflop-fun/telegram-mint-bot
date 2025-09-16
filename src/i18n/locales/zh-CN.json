@@ -192,12 +192,15 @@
   "mint_data.mint_authority": "🔑 <b>铸币权限：</b>",
   "mint_data.freeze_authority": "❄️ <b>冻结权限：</b>",
   "mint_data.is_initialized": "✅ <b>已初始化：</b>",
+  "buttons.refresh_data": "🔄 刷新数据",
+  "buttons.view_on_explorer": "🔍 在浏览器查看",
+  "buttons.copy_mint_address": "📋 复制地址",
+  "copy.address_copied": "✅ 地址已复制！",
+  "copy.mint_address_copied": "✅ 代币地址已复制！",
   "mint_data.no_authority": "无",
   "mint_data.fetch_error": "❌ 获取代币数据失败，请检查地址后重试。",
   "mint_data.token_not_found": "❌ 未找到代币，请检查地址后重试。",
   "mint_data.copy_mint_feedback": "📋 代币地址已复制：{address}",
-  "buttons.copy_mint_address": "📋 复制地址",
-  "buttons.view_on_explorer": "🔍 在浏览器查看",
   "buttons.check_another": "🔄 查看其他代币",
   "buttons.try_again": "🔄 重试"
 }
