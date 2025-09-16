@@ -106,7 +106,6 @@ handleGenerateWallets(bot);
 
 bot.action('menu_my_wallets', (ctx) => handleMyWallets(ctx));
 bot.action(/^view_key_(.+)$/, (ctx) => handleViewKey(ctx));
-bot.action(/^remove_wallet_(.+)$/, (ctx) => handleRemoveWallet(ctx));
 bot.action('add_new_wallet', (ctx) => handleAddNewWallet(ctx));
 
 handleWalletPagination(bot);

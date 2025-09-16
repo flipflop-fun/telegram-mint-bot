@@ -45,6 +45,10 @@
   "wallets.removed": "✅ Monedero eliminado",
   "wallets.not_found_or_removed": "❌ Monedero no encontrado o ya eliminado",
   "wallets.limit_reached": "❌ Has alcanzado el límite máximo de 100 monederos",
+  "wallets.confirm_remove_title": "⚠️ <b>Confirmar eliminación de monedero</b>",
+  "wallets.confirm_remove_message": "¿Estás seguro de que quieres eliminar este monedero?\n\n<code>{address}</code>\n\n⚠️ <b>Advertencia:</b> Esta acción no se puede deshacer. Asegúrate de haber respaldado tu clave privada si es necesario.",
+  "buttons.confirm_remove": "🗑️ Sí, eliminar",
+  "buttons.cancel": "❌ Cancelar",
 
   "labels.wallet": "Monedero",
   "labels.spl_tokens": "Tokens SPL",

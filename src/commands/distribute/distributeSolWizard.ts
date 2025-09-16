@@ -74,7 +74,7 @@ const distributeSolWizard = new Scenes.WizardScene(
         balances
           .map((wallet: any, index: number) => {
             const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
-            const balance = wallet.solBalance.toFixed(4); // Show balance up to 4 decimal places
+            const balance = wallet.solBalance.toFixed(2); // Show balance up to 2 decimal places
             return [
               Markup.button.callback(`${index + 1}. ${shortAddress}`, `select_sender_${wallet.address}`),
               Markup.button.callback(`💰 ${balance} ${t('units.sol')}`, `balance_${wallet.address}`),
@@ -119,7 +119,7 @@ const distributeSolWizard = new Scenes.WizardScene(
           balances
             .map((wallet: any, index: number) => {
               const shortAddress = `${wallet.address.slice(0, 3)}...${wallet.address.slice(-4)}`;
-              const balance = wallet.solBalance.toFixed(4);
+              const balance = wallet.solBalance.toFixed(2);
               return [
                 Markup.button.callback(`${index + 1}. ${shortAddress}`, `select_recipient_${wallet.address}`),
                 Markup.button.callback(`💰 ${balance} ${t('units.sol')}`, `balance_${wallet.address}`),

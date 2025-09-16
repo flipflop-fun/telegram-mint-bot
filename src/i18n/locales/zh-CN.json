@@ -45,6 +45,10 @@
   "wallets.removed": "✅ 删除成功",
   "wallets.not_found_or_removed": "❌ 未找到钱包或已删除",
   "wallets.limit_reached": "❌ 钱包数量已达上限 100",
+  "wallets.confirm_remove_title": "⚠️ <b>确认删除钱包</b>",
+  "wallets.confirm_remove_message": "您确定要删除这个钱包吗？\n\n<code>{address}</code>\n\n⚠️ <b>警告：</b> 此操作无法撤销。如有需要，请确保已备份私钥。",
+  "buttons.confirm_remove": "🗑️ 确认删除",
+  "buttons.cancel": "❌ 取消",
 
   "labels.wallet": "钱包",
   "labels.spl_tokens": "SPL 代币",

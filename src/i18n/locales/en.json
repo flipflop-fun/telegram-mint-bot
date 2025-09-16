@@ -45,6 +45,10 @@
   "wallets.removed": "✅ Wallet removed successfully",
   "wallets.not_found_or_removed": "❌ Wallet not found or already removed",
   "wallets.limit_reached": "❌ You have reached the maximum limit of 100 wallets",
+  "wallets.confirm_remove_title": "⚠️ <b>Confirm Wallet Removal</b>",
+  "wallets.confirm_remove_message": "Are you sure you want to remove this wallet?\n\n<code>{address}</code>\n\n⚠️ <b>Warning:</b> This action cannot be undone. Make sure you have backed up your private key if needed.",
+  "buttons.confirm_remove": "🗑️ Yes, Remove",
+  "buttons.cancel": "❌ Cancel",
 
   "labels.wallet": "Wallet",
   "labels.spl_tokens": "SPL Tokens",

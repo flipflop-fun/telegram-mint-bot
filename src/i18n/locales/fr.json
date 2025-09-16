@@ -45,6 +45,10 @@
   "wallets.removed": "✅ Portefeuille supprimé",
   "wallets.not_found_or_removed": "❌ Portefeuille introuvable ou déjà supprimé",
   "wallets.limit_reached": "❌ Limite maximale de 100 portefeuilles atteinte",
+  "wallets.confirm_remove_title": "⚠️ <b>Confirmer la suppression du portefeuille</b>",
+  "wallets.confirm_remove_message": "Êtes-vous sûr de vouloir supprimer ce portefeuille ?\n\n<code>{address}</code>\n\n⚠️ <b>Avertissement :</b> Cette action ne peut pas être annulée. Assurez-vous d'avoir sauvegardé votre clé privée si nécessaire.",
+  "buttons.confirm_remove": "🗑️ Oui, supprimer",
+  "buttons.cancel": "❌ Annuler",
 
   "labels.wallet": "Portefeuille",
   "labels.spl_tokens": "Tokens SPL",

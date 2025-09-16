@@ -99,7 +99,7 @@ export async function handleMyWallets(ctx: any, page = 1, isEdit = false) {
         // Ensure proper formatting of SOL balance
         let solBalance: string;
         if (walletBalance && typeof walletBalance.solBalance === 'number') {
-            solBalance = walletBalance.solBalance.toFixed(4);
+            solBalance = walletBalance.solBalance.toFixed(2);
         } else {
             solBalance = t('common.na');
         }
@@ -197,20 +197,59 @@ export async function handleViewKey(ctx: any) {
 
 export async function handleRemoveWallet(ctx: any) {
     const walletAddress = ctx.match[1];
+    const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+
+    // Show confirmation dialog
+    const confirmationMessage = t('wallets.confirm_remove_message', { address: walletAddress });
+    const confirmationTitle = t('wallets.confirm_remove_title');
+    
+    const fullMessage = `${confirmationTitle}\n\n${confirmationMessage}`;
+
+    const keyboard = Markup.inlineKeyboard([
+        [Markup.button.callback(t('buttons.confirm_remove'), `confirm_remove_${walletAddress}`)],
+        [Markup.button.callback(t('buttons.cancel'), 'cancel_remove')],
+    ]);
+
+    await ctx.reply(fullMessage, {
+        parse_mode: 'HTML',
+        reply_markup: keyboard.reply_markup,
+    });
+
+    await ctx.answerCbQuery();
+}
+
+export async function handleConfirmRemoveWallet(ctx: any) {
+    const walletAddress = ctx.match[1];
     const userId = ctx.from.id as number;
 
     const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
 
     if (!removeWallet(userId, walletAddress)) {
-        return ctx.answerCbQuery(t('wallets.not_found_or_removed'), { show_alert: true });
+        await ctx.editMessageText(t('wallets.not_found_or_removed'), { parse_mode: 'HTML' });
+        return;
     }
 
-    await ctx.answerCbQuery(t('wallets.removed'), { show_alert: true });
+    await ctx.editMessageText(t('wallets.removed'), { parse_mode: 'HTML' });
 
-    const match = ctx.callbackQuery?.data.match(/^my_wallets_page_(\d+)$/);
-    const currentPage = match ? parseInt(match[1], 10) : 1;
+    // Refresh the wallets page after a short delay
+    setTimeout(async () => {
+        const match = ctx.callbackQuery?.data.match(/^my_wallets_page_(\d+)$/);
+        const currentPage = match ? parseInt(match[1], 10) : 1;
+        await handleMyWallets(ctx, currentPage, false);
+    }, 1500);
+}
 
-    await handleMyWallets(ctx, currentPage, true);
+export async function handleCancelRemoveWallet(ctx: any) {
+    const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+    
+    await ctx.editMessageText(t('buttons.cancel'), { parse_mode: 'HTML' });
+    
+    // Go back to wallets page after a short delay
+    setTimeout(async () => {
+        const match = ctx.callbackQuery?.data.match(/^my_wallets_page_(\d+)$/);
+        const currentPage = match ? parseInt(match[1], 10) : 1;
+        await handleMyWallets(ctx, currentPage, false);
+    }, 1000);
 }
 
 export async function handleAddNewWallet(ctx: any) {
@@ -257,7 +296,7 @@ export function handleWalletPagination(bot: any) {
         try {
             const [result] = await fetchMultipleSolBalances([address]);
             const amount = result ? result.solBalance : undefined;
-            const display = typeof amount === 'number' ? amount.toFixed(6) : t('common.na');
+            const display = typeof amount === 'number' ? amount.toFixed(4) : t('common.na');
             const message = `${t('labels.balance')}: ${display} ${t('units.sol')}`;
             await ctx.answerCbQuery(message, { show_alert: true });
         } catch (e) {
@@ -268,6 +307,15 @@ export function handleWalletPagination(bot: any) {
     bot.action(/^view_all_tokens_(.+)$/, handleViewAllTokens);
 
     bot.action('close_tokens_message', handleCloseTokensMessage);
+
+    // Handle remove wallet confirmation
+    bot.action(/^remove_wallet_(.+)$/, handleRemoveWallet);
+    
+    // Handle confirm remove wallet
+    bot.action(/^confirm_remove_(.+)$/, handleConfirmRemoveWallet);
+    
+    // Handle cancel remove wallet
+    bot.action('cancel_remove', handleCancelRemoveWallet);
 
     bot.action('menu_main', (ctx: any) => handleBackToMainMenu(ctx));
 }
