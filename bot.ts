@@ -7,6 +7,7 @@ import { registerMintActions } from './src/commands/mint';
 import { registerRefundActions } from './src/commands/refund';
 import { BOT_TOKEN } from './config';
 import { withI18n, SUPPORTED_LOCALES, LANGUAGE_NAMES, Locale } from './src/i18n/i18n';
+import { getInlineKeyboard } from './src/utils/config';
 
 // Check if BOT_TOKEN is set
 if (!BOT_TOKEN) {
@@ -29,20 +30,7 @@ async function renderMainMenu(ctx: any, editMessage = false) {
     `${t('main_menu.desc')}`;
   
   const menuMarkup = {
-    inline_keyboard: [
-      [
-        { text: t('buttons.generate_wallets'), callback_data: 'menu_generate_wallets' },
-        { text: t('buttons.my_wallets'), callback_data: 'menu_my_wallets' },
-      ],
-      [
-        { text: t('buttons.mint'), callback_data: 'menu_mint' },
-        { text: t('buttons.refund'), callback_data: 'menu_refund' },
-      ],
-      [
-        { text: t('buttons.language'), callback_data: 'menu_language' },
-        { text: t('buttons.help'), callback_data: 'menu_help' },
-      ],
-    ],
+    inline_keyboard: getInlineKeyboard(t),
   };
 
   if (editMessage && ctx.callbackQuery) {

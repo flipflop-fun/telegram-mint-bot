@@ -16,9 +16,7 @@
   "buttons.add_new_wallet": "➕ Add New Wallet",
   "buttons.view_all_tokens": "🔍 SPL Tokens",
   "buttons.remove": "🗑️ Remove",
-
   "help.text": "ℹ️ <b>How to Use Your Solmate:</b>\n\n1️⃣ Use \"💳 Generate Wallets\" to create wallets.\n2️⃣ Use \"📜 My Wallets\" to manage wallets.\n3️⃣ Use \"🪙 Mint Tokens\" to mint new tokens.\n4️⃣ Use \"💰 Refund\" to process refunds.\n\n⚠️ <b>Safety Reminders:</b>\n\n🔒 Keep your private keys private.\n💾 Save your .txt file securely.\n🗑️ Delete the .txt file from the chat history for security.",
-
   "generate.select_number": "Select the number of wallets to generate:",
   "generate.1_wallet": "1 Wallet 💳",
   "generate.5_wallets": "5 Wallets 💳",
@@ -29,7 +27,6 @@
   "generate.invalid_number": "Invalid number. Please enter a number between 1 and 100.",
   "generate.success": "🎉 {count} wallet(s) successfully generated!",
   "generate.error": "❌ An error occurred while generating wallets. Please try again.",
-
   "wallets.fetching": "⏳ Fetching your wallets and balances, please wait...",
   "wallets.none": "🪙 You have not generated any wallets yet. Use \"💳 Generate Wallets\" to create new wallets",
   "wallets.error_balances": "❌ Error fetching wallet balances. Please try again later",
@@ -46,16 +43,12 @@
   "wallets.confirm_remove_message": "Are you sure you want to remove this wallet?\n\n<code>{address}</code>\n\n⚠️ <b>Warning:</b> This action cannot be undone. Make sure you have backed up your private key if needed.",
   "buttons.confirm_remove": "🗑️ Yes, Remove",
   "buttons.cancel": "❌ Cancel",
-
   "labels.wallet": "Wallet",
   "labels.spl_tokens": "SPL Tokens",
   "labels.ca": "CA",
   "labels.balance": "Balance",
-
   "wallets.private_key": "🔑 <b>Private key</b> for wallet <code>{address}</code>:\n\n<tg-spoiler>{private_key}</tg-spoiler>",
-
   "units.sol": "SOL",
-
   "sol.mode_title": "🔄 Select a distribution mode:",
   "sol.mode_even": "Even distribution",
   "sol.mode_single": "Single transfer",
@@ -64,14 +57,12 @@
   "sol.select_recipient": "Select a wallet to RECEIVE SOL:",
   "sol.enter_total": "Enter the total amount of SOL to distribute evenly:",
   "sol.enter_amount": "Enter the amount of SOL to send (e.g., 0.5, 1, 1.345):",
-
   "common.select_wallet": "❌ Please select a wallet.",
   "common.invalid_input": "❌ Please enter a valid value.",
   "common.invalid_amount": "❌ Invalid amount. Enter a number greater than 0.",
   "common.na": "N/A",
   "common.sender_wallet": "Sender Wallet",
   "common.recipient_wallet": "Recipient Wallet",
-
   "spl.select_sender": "Select a wallet to distribute SPL tokens:",
   "spl.fetching_tokens": "⏳ Fetching tokens for the selected wallet...",
   "spl.no_tokens_wallet": "❌ This wallet has no SPL tokens. Please select another:",
@@ -85,14 +76,11 @@
   "spl.select_token_prompt": "❌ Please select or enter a valid SPL token address.",
   "spl.sending": "⏳ Sending SPL tokens, please wait...",
   "spl.no_recipients": "❌ No valid recipient wallets found.",
-
   "common.error_try_again": "❌ An error occurred. Please try again.",
-
   "tx.success_html": "🎉 <b>Transaction Successful!</b>\n\n📄 <b>Tx Hash:</b> <a href=\"{explorer_url}\">{signature}</a>\n\nYou can verify this transaction on the Solana Explorer",
   "errors.insufficient_funds_sol": "❌ Transaction failed due to insufficient funds in the sender wallet. Please ensure you have enough SOL to cover the transaction amount and fees.",
   "errors.insufficient_funds_spl": "❌ Transaction failed due to insufficient SPL token balance or funds to cover the transfer. Please ensure you have enough tokens and SOL for fees.",
   "errors.spl_program_error": "❌ Transaction failed due to an error in the SPL Token program. Ensure the recipient wallet is valid and the token amount is correct.",
-
   "lang.menu_title": "🌐 Select your language:",
   "lang.updated": "✅ Language updated."
 }

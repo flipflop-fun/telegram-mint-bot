@@ -4,7 +4,8 @@
   "main_menu.desc": "Utilisez les boutons ci-dessous pour naviguer parmi les fonctionnalités disponibles :",
   "buttons.generate_wallets": "💳 Générer des portefeuilles",
   "buttons.my_wallets": "📜 Mes portefeuilles",
-  "buttons.distribute_tokens": "💸 Distribuer des tokens",
+  "buttons.mint": "🪙 Frapper des tokens",
+  "buttons.refund": "💰 Remboursement",
   "buttons.help": "ℹ️ Aide",
   "buttons.language": "🌐 Langue",
   "buttons.back_to_main": "🔙 Retour au menu",
@@ -15,13 +16,7 @@
   "buttons.add_new_wallet": "➕ Ajouter un portefeuille",
   "buttons.view_all_tokens": "🔍 Tokens SPL",
   "buttons.remove": "🗑️ Supprimer",
-
-  "choose_token_type.title": "💸 Choisissez le type de token à distribuer :",
-  "choose_token_type.sol": "💰 Distribuer du SOL",
-  "choose_token_type.spl": "🪙 Distribuer des tokens SPL",
-
-  "help.text": "ℹ️ <b>Comment utiliser votre Solmate :</b>\n\n1️⃣ Utilisez \"💳 Générer des portefeuilles\" pour créer des portefeuilles.\n2️⃣ Utilisez \"📜 Mes portefeuilles\" pour les gérer.\n3️⃣ Utilisez \"💸 Distribuer des tokens\" pour envoyer du SOL ou des tokens SPL.\n\n⚠️ <b>Rappels de sécurité :</b>\n\n🔒 Gardez vos clés privées secrètes.\n💾 Conservez votre fichier .txt en lieu sûr.\n🗑️ Supprimez le fichier .txt de l'historique du chat pour la sécurité.",
-
+  "help.text": "ℹ️ <b>Comment utiliser SolMate :</b>\n\n1️⃣ Utilisez '💳 Générer des portefeuilles' pour créer des portefeuilles.\n2️⃣ Utilisez '📜 Mes portefeuilles' pour gérer les portefeuilles.\n3️⃣ Utilisez '🪙 Frapper des tokens' pour créer de nouveaux tokens.\n4️⃣ Utilisez '💰 Remboursement' pour traiter les remboursements.\n\n⚠️ <b>Conseils de sécurité :</b>\n\n🔒 Gardez les clés privées en sécurité.\n💾 Sauvegardez les fichiers .txt en sécurité.\n🗑️ Supprimez les fichiers .txt de l'historique de chat.",
   "generate.select_number": "Sélectionnez le nombre de portefeuilles à générer :",
   "generate.1_wallet": "1 Portefeuille 💳",
   "generate.5_wallets": "5 Portefeuilles 💳",
@@ -32,7 +27,6 @@
   "generate.invalid_number": "Nombre invalide. Entrez un nombre entre 1 et 100.",
   "generate.success": "🎉 {count} portefeuille(s) généré(s) avec succès !",
   "generate.error": "❌ Une erreur s'est produite lors de la génération. Réessayez.",
-
   "wallets.fetching": "⏳ Récupération de vos portefeuilles et soldes, veuillez patienter...",
   "wallets.none": "🪙 Vous n'avez pas encore généré de portefeuilles. Utilisez \"💳 Générer des portefeuilles\" pour créer",
   "wallets.error_balances": "❌ Erreur lors de la récupération des soldes. Réessayez plus tard",
@@ -49,14 +43,12 @@
   "wallets.confirm_remove_message": "Êtes-vous sûr de vouloir supprimer ce portefeuille ?\n\n<code>{address}</code>\n\n⚠️ <b>Avertissement :</b> Cette action ne peut pas être annulée. Assurez-vous d'avoir sauvegardé votre clé privée si nécessaire.",
   "buttons.confirm_remove": "🗑️ Oui, supprimer",
   "buttons.cancel": "❌ Annuler",
-
   "labels.wallet": "Portefeuille",
   "labels.spl_tokens": "Tokens SPL",
   "labels.ca": "CA",
   "labels.balance": "Solde",
   "wallets.private_key": "🔑 <b>Clé privée</b> du portefeuille <code>{address}</code>:\n\n<tg-spoiler>{private_key}</tg-spoiler>",
   "units.sol": "SOL",
-
   "sol.mode_title": "🔄 Sélectionnez un mode de distribution :",
   "sol.mode_even": "Répartition égale",
   "sol.mode_single": "Transfert unique",
@@ -64,16 +56,14 @@
   "sol.select_sender": "Sélectionnez un portefeuille pour ENVOYER du SOL :",
   "sol.select_recipient": "Sélectionnez un portefeuille pour RECEVOIR du SOL :",
   "sol.enter_total": "Entrez le montant total de SOL à répartir équitablement :",
-  "sol.enter_amount": "Entrez le montant de SOL à envoyer (ex. 0.5, 1, 1.345) :",
-  "sol.sending": "⏳ Envoi de SOL, veuillez patienter...",
-  "sol.distributing": "⏳ Distribution de SOL en cours, veuillez patienter...",
-
+  "sol.enter_amount": "Entrez le montant de SOL à envoyer (ex: 0.5, 1, 1.345) :",
   "common.select_wallet": "❌ Veuillez sélectionner un portefeuille.",
   "common.invalid_input": "❌ Veuillez entrer une valeur valide.",
   "common.invalid_amount": "❌ Montant invalide. Entrez un nombre supérieur à 0.",
-  "common.na": "N/D",
+  "common.na": "N/A",
+  "common.sender_wallet": "Portefeuille expéditeur",
+  "common.recipient_wallet": "Portefeuille destinataire",
   "common.error_try_again": "❌ Une erreur s'est produite. Veuillez réessayer.",
-
   "spl.select_sender": "Sélectionnez un portefeuille pour distribuer des tokens :",
   "spl.fetching_tokens": "⏳ Récupération des tokens pour le portefeuille sélectionné...",
   "spl.no_tokens_wallet": "❌ Ce portefeuille ne possède aucun token SPL. Sélectionnez-en un autre :",
@@ -87,12 +77,10 @@
   "spl.select_token_prompt": "❌ Veuillez sélectionner ou entrer une adresse de token SPL valide.",
   "spl.sending": "⏳ Envoi de tokens SPL, veuillez patienter...",
   "spl.no_recipients": "❌ Aucun portefeuille destinataire valide trouvé.",
-
   "tx.success_html": "🎉 <b>Transaction réussie !</b>\n\n📄 <b>Hash Tx :</b> <a href=\"{explorer_url}\">{signature}</a>\n\nVous pouvez vérifier cette transaction sur Solana Explorer",
   "errors.insufficient_funds_sol": "❌ Transaction échouée en raison de fonds insuffisants dans le portefeuille expéditeur. Assurez-vous d'avoir assez de SOL pour couvrir le montant et les frais.",
   "errors.insufficient_funds_spl": "❌ Transaction échouée en raison d'un solde de tokens SPL insuffisant ou de fonds pour couvrir le transfert. Assurez-vous d'avoir assez de tokens et de SOL pour les frais.",
   "errors.spl_program_error": "❌ Transaction échouée en raison d'une erreur dans le programme SPL Token. Assurez-vous que le portefeuille destinataire est valide et que le montant de tokens est correct.",
-
   "lang.menu_title": "🌐 Sélectionnez votre langue :",
   "lang.updated": "✅ Langue mise à jour."
 }
