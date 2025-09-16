@@ -1,10 +1,10 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import Database from 'better-sqlite3';
 import Bottleneck from 'bottleneck';
-import { MAINNET, DB_FILE } from '../../config';
+import { RPC, DB_FILE } from '../../config';
 
 // Use the RPC endpoint from config
-const connection = new Connection(MAINNET);
+const connection = new Connection(RPC, 'confirmed');
 const db = new Database(DB_FILE);
 
 const limiter = new Bottleneck({

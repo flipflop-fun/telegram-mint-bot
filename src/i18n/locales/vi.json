@@ -6,6 +6,8 @@
   "buttons.my_wallets": "📜 Ví Của Tôi",
   "buttons.mint": "🪙 Tạo Token",
   "buttons.refund": "💰 Hoàn Tiền",
+  "buttons.send_sol": "💸 Gửi SOL",
+  "buttons.send_spl": "🪙 Gửi SPL",
   "buttons.help": "ℹ️ Trợ Giúp",
   "buttons.language": "🌐 Ngôn Ngữ",
   "buttons.back_to_main": "🔙 Quay Về Menu Chính",

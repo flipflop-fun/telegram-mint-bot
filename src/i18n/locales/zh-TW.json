@@ -6,6 +6,8 @@
   "buttons.my_wallets": "📜 我的錢包",
   "buttons.mint": "🪙 鑄造代幣",
   "buttons.refund": "💰 退款",
+  "buttons.send_sol": "💸 發送SOL",
+  "buttons.send_spl": "🪙 發送SPL",
   "buttons.help": "ℹ️ 幫助",
   "buttons.language": "🌐 語言",
   "buttons.back_to_main": "🔙 返回主選單",

@@ -5,9 +5,10 @@ import { handleBackToMainMenu } from './src/utils/bot/navigation';
 import { registerHelpMenu } from './src/commands/help';
 import { registerMintActions } from './src/commands/mint';
 import { registerRefundActions } from './src/commands/refund';
-import { BOT_TOKEN } from './config';
+import { registerSendSolActions } from './src/commands/sendSol';
+import { registerSendSplActions } from './src/commands/sendSpl';
+import { BOT_TOKEN, getInlineKeyboard } from './config';
 import { withI18n, SUPPORTED_LOCALES, LANGUAGE_NAMES, Locale } from './src/i18n/i18n';
-import { getInlineKeyboard } from './src/utils/config';
 
 // Check if BOT_TOKEN is set
 if (!BOT_TOKEN) {
@@ -97,6 +98,8 @@ handleWalletPagination(bot);
 registerHelpMenu(bot);
 registerMintActions(bot);
 registerRefundActions(bot);
+registerSendSolActions(bot);
+registerSendSplActions(bot);
 
 bot.action('menu_main', (ctx) => handleBackToMainMenu(ctx));
 

@@ -1,5 +1,4 @@
-import { Markup } from 'telegraf';
-import { getInlineKeyboard } from '../config';
+import { getInlineKeyboard } from "../../../config";
 
 /**
  * Handle navigation back to the main menu.
