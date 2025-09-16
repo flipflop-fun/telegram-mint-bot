@@ -7,6 +7,7 @@ import { registerMintActions, handleMintTextInput } from './src/commands/mint';
 import { registerRefundActions } from './src/commands/refund';
 import { registerSendSolActions, handleRecipientInput, handleAmountInput } from './src/commands/sendSol';
 import { registerSendSplActions, handleTokenMintInput, handleSplRecipientInput, handleSplAmountInput } from './src/commands/sendSpl';
+import { registerMintDataActions, handleMintDataAddressInput } from './src/commands/mintData';
 import { BOT_TOKEN, getInlineKeyboard } from './config';
 import { withI18n, SUPPORTED_LOCALES, LANGUAGE_NAMES, Locale } from './src/i18n/i18n';
 
@@ -97,6 +98,7 @@ bot.action('add_new_wallet', (ctx) => handleAddNewWallet(ctx));
 handleWalletPagination(bot);
 registerHelpMenu(bot);
 registerMintActions(bot);
+registerMintDataActions(bot);
 registerRefundActions(bot);
 registerSendSolActions(bot);
 registerSendSplActions(bot);
@@ -113,8 +115,13 @@ bot.on('text', async (ctx: any) => {
   // Handle mint text inputs (check first as it doesn't use session flags)
   await handleMintTextInput(ctx);
   
+  // Handle mint data text inputs
+  if (ctx.session?.waitingForMintDataAddress) {
+    console.log(`处理代币数据地址输入: ${text}`);
+    await handleMintDataAddressInput(ctx);
+  }
   // Handle SOL sending text inputs
-  if (ctx.session?.waitingForSolRecipient) {
+  else if (ctx.session?.waitingForSolRecipient) {
     console.log(`处理SOL接收方地址输入: ${text}`);
     await handleRecipientInput(ctx);
   } else if (ctx.session?.waitingForSolAmount) {
