@@ -32,6 +32,10 @@ const userStates = new Map<number, {
     currentIndex: number;
     results: Array<{ success: boolean; signature?: string; error?: string }>;
   };
+  lastMintData?: {
+    mintAddress: string;
+    signature: string;
+  };
 }>();
 
 /**
@@ -192,7 +196,7 @@ export async function handleMintTextInput(ctx: any) {
           mintAddress: state.tokenData.mintAddress,
           urc: state.tokenData.urc,
           wallet: state.tokenData.minterWallet?.address,
-          count: batchCount
+          batchCount: batchCount
         });
 
         await ctx.reply(confirmText, {
@@ -439,11 +443,15 @@ export async function handleBatchMint(ctx: any) {
   }
 
   try {
-    await ctx.editMessageText(t('mint.batch_processing'), {
+    const { mintAddress, urc, minterWallet, batchCount } = state.tokenData;
+    
+    // Show initial processing message with variables
+    await ctx.editMessageText(t('mint.batch_processing', {
+      current: 1,
+      total: batchCount || 1
+    }), {
       parse_mode: 'HTML',
     });
-
-    const { mintAddress, urc, minterWallet, batchCount } = state.tokenData;
     
     // Initialize batch mint results
     state.batchMintResults = {
@@ -476,13 +484,31 @@ export async function handleBatchMint(ctx: any) {
             signature: mintResult.data.tx
           });
           
-          // Show individual success message
+          // Show individual success message with all variables
           const successMsg = t('mint.batch_success', {
-            index: i + 1,
-            signature: mintResult.data.tx
+            current: i + 1,
+            total: batchCount || 1,
+            mintAddress: mintAddress,
+            signature: mintResult.data.tx,
+            wallet: minterWallet.address,
+            urc: urc
           });
           
-          await ctx.reply(successMsg, { parse_mode: 'HTML' });
+          const explorerUrl = `https://explorer.solana.com/tx/${mintResult.data.tx}${RPC.includes("devnet") ? "?cluster=devnet" : ""}`;
+          
+          // Store mint data for copy actions
+          state.lastMintData = { mintAddress, signature: mintResult.data.tx };
+          
+          await ctx.reply(successMsg, { 
+            parse_mode: 'HTML',
+            reply_markup: Markup.inlineKeyboard([
+              [
+                Markup.button.callback(t('buttons.copy_mint_address'), 'copy_last_mint'),
+                Markup.button.callback(t('buttons.copy_tx'), 'copy_last_tx')
+              ],
+              [Markup.button.url(t('buttons.view_transaction'), explorerUrl)]
+            ]).reply_markup,
+          });
         } else {
           state.batchMintResults.failed++;
           state.batchMintResults.results.push({
@@ -490,9 +516,9 @@ export async function handleBatchMint(ctx: any) {
             error: mintResult.message || 'Unknown error'
           });
           
-          // Show individual failure message
+          // Show individual failure message with all variables
           const failMsg = t('mint.batch_failed', {
-            index: i + 1,
+            current: i + 1,
             error: mintResult.message || 'Unknown error'
           });
           
@@ -505,9 +531,9 @@ export async function handleBatchMint(ctx: any) {
           error: error instanceof Error ? error.message : 'Unknown error'
         });
         
-        // Show individual error message
+        // Show individual error message with all variables
         const errorMsg = t('mint.batch_failed', {
-          index: i + 1,
+          current: i + 1,
           error: error instanceof Error ? error.message : 'Unknown error'
         });
         
@@ -515,13 +541,14 @@ export async function handleBatchMint(ctx: any) {
       }
     }
 
-    // Show final results
+    // Show final results with all variables
     const completeText = t('mint.batch_complete', {
-      total: state.batchMintResults.total,
-      successful: state.batchMintResults.successful,
-      failed: state.batchMintResults.failed,
       mintAddress: mintAddress,
-      wallet: minterWallet.address
+      wallet: minterWallet.address,
+      urc: urc,
+      successful: state.batchMintResults.successful,
+      total: state.batchMintResults.total,
+      failed: state.batchMintResults.failed
     });
 
     await ctx.reply(completeText, {
@@ -590,10 +617,20 @@ export async function handleTokenMintConfirmation(ctx: any) {
         urc: urc
       });
 
+      // Store mint data for copy actions
+      const userId = ctx.from.id;
+      const state = userStates.get(userId) || { step: 'select_action' };
+      state.lastMintData = { mintAddress, signature };
+      userStates.set(userId, state);
+
       await ctx.editMessageText(successText, {
         parse_mode: 'HTML',
         reply_markup: Markup.inlineKeyboard([
-          [Markup.button.url('🔍 查看交易详情', explorerUrl)],
+          [
+            Markup.button.callback(t('buttons.copy_mint_address'), 'copy_last_mint'),
+            Markup.button.callback(t('buttons.copy_tx'), 'copy_last_tx')
+          ],
+          [Markup.button.url(t('buttons.view_transaction'), explorerUrl)],
           [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
         ]).reply_markup,
       });
@@ -615,6 +652,27 @@ export async function handleTokenMintConfirmation(ctx: any) {
   }
 }
 
+// Handle copy actions for mint addresses and transaction signatures
+export async function handleMintCopyAction(ctx: any) {
+  const t = ctx.t;
+  const callbackData = ctx.callbackQuery.data;
+  const userId = ctx.from.id;
+  const state = userStates.get(userId);
+  
+  if (!state || !state.lastMintData) {
+    await ctx.answerCbQuery('❌ 没有可复制的数据');
+    return;
+  }
+  
+  if (callbackData === 'copy_last_mint') {
+    await ctx.answerCbQuery(t('copy.address_copied'));
+    await ctx.reply(`\`${state.lastMintData.mintAddress}\``, { parse_mode: 'MarkdownV2' });
+  } else if (callbackData === 'copy_last_tx') {
+    await ctx.answerCbQuery(t('copy.tx_copied'));
+    await ctx.reply(`\`${state.lastMintData.signature}\``, { parse_mode: 'MarkdownV2' });
+  }
+}
+
 /**
  * Register mint-related bot actions
  */
@@ -629,4 +687,8 @@ export function registerMintActions(bot: any) {
   
   // Handle minter selection
   bot.action(/^select_minter_\d+$/, handleMinterSelection);
+  
+  // Handle copy actions
+  bot.action('copy_last_mint', handleMintCopyAction);
+  bot.action('copy_last_tx', handleMintCopyAction);
 }
