@@ -62,7 +62,7 @@ export async function handleMyWallets(ctx: any, page = 1, isEdit = false) {
     lines.push(t('wallets.last_refreshed', { time: timestamp }));
     lines.push('');
 
-    const separator = '━━━━━━━━━━━━━━━━━━━━━━━━━━━';
+    const separator = '━━━━━━━━━━━━━━━━';
 
     currentWallets.forEach((wallet: any, index: number) => {
         const walletIndex = page > 1 ? (page - 1) * itemsPerPage + index + 1 : index + 1;
