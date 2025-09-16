@@ -17,11 +17,12 @@ export async function handleBackToMainMenu(ctx: any) {
             { text: t('buttons.my_wallets'), callback_data: 'menu_my_wallets' },
           ],
           [
-            { text: t('buttons.distribute_tokens'), callback_data: 'menu_distribute_tokens' },
-            { text: t('buttons.help'), callback_data: 'menu_help' },
+            { text: t('buttons.mint'), callback_data: 'menu_mint' },
+            { text: t('buttons.refund'), callback_data: 'menu_refund' },
           ],
           [
             { text: t('buttons.language'), callback_data: 'menu_language' },
+            { text: t('buttons.help'), callback_data: 'menu_help' },
           ],
         ],
       },

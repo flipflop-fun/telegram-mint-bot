@@ -1,11 +1,10 @@
 import { Telegraf, Markup, Scenes, session } from 'telegraf';
-import { distributeSolWizard } from './src/commands/distribute/distributeSolWizard';
-import { distributeSplWizard } from './src/commands/distribute/distributeSplWizard';
 import { handleGenerateWallets } from './src/commands/generateWallets';
 import { handleMyWallets, handleViewKey, handleRemoveWallet, handleAddNewWallet, handleWalletPagination } from './src/commands/myWallets';
 import { handleBackToMainMenu } from './src/utils/bot/navigation';
-import { chooseTokenType, registerTokenTypeActions } from './src/utils/bot/chooseTokenType';
 import { registerHelpMenu } from './src/commands/help';
+import { registerMintActions } from './src/commands/mint';
+import { registerRefundActions } from './src/commands/refund';
 import { BOT_TOKEN } from './config';
 import { withI18n, SUPPORTED_LOCALES, LANGUAGE_NAMES, Locale } from './src/i18n/i18n';
 
@@ -17,19 +16,10 @@ if (!BOT_TOKEN) {
 
 const bot = new Telegraf(BOT_TOKEN);
 
-const stage = new Scenes.Stage([distributeSolWizard, distributeSplWizard]);
+const stage = new Scenes.Stage([]);
 bot.use(session());
-// Attach i18n middleware so all handlers can access ctx.i18n
 bot.use(withI18n());
 bot.use(stage.middleware());
-
-// Token Distribution Menu
-bot.action('menu_distribute_tokens', async (ctx) => {
-  await chooseTokenType(ctx);
-});
-
-// Register Token Type Actions
-registerTokenTypeActions(bot);
 
 // Helper to render main menu with translations
 async function renderMainMenu(ctx: any, editMessage = false) {
@@ -40,11 +30,18 @@ async function renderMainMenu(ctx: any, editMessage = false) {
   
   const menuMarkup = {
     inline_keyboard: [
-      [{ text: t('buttons.generate_wallets'), callback_data: 'menu_generate_wallets' }],
-      [{ text: t('buttons.my_wallets'), callback_data: 'menu_my_wallets' }],
-      [{ text: t('buttons.distribute_tokens'), callback_data: 'menu_distribute_tokens' }],
-      [{ text: t('buttons.help'), callback_data: 'menu_help' }],
-      [{ text: t('buttons.language'), callback_data: 'menu_language' }],
+      [
+        { text: t('buttons.generate_wallets'), callback_data: 'menu_generate_wallets' },
+        { text: t('buttons.my_wallets'), callback_data: 'menu_my_wallets' },
+      ],
+      [
+        { text: t('buttons.mint'), callback_data: 'menu_mint' },
+        { text: t('buttons.refund'), callback_data: 'menu_refund' },
+      ],
+      [
+        { text: t('buttons.language'), callback_data: 'menu_language' },
+        { text: t('buttons.help'), callback_data: 'menu_help' },
+      ],
     ],
   };
 
@@ -110,6 +107,8 @@ bot.action('add_new_wallet', (ctx) => handleAddNewWallet(ctx));
 
 handleWalletPagination(bot);
 registerHelpMenu(bot);
+registerMintActions(bot);
+registerRefundActions(bot);
 
 bot.action('menu_main', (ctx) => handleBackToMainMenu(ctx));
 
