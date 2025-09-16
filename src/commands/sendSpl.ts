@@ -1,6 +1,6 @@
 import { Markup } from 'telegraf';
 import { Connection, PublicKey, Keypair } from '@solana/web3.js';
-import { getAssociatedTokenAddress, createTransferInstruction, getAccount, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { getAssociatedTokenAddress, createTransferInstruction, getAccount, getMint, createAssociatedTokenAccountInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { getUserWallets } from '../services/db';
 import { createTransaction, sendTransaction } from '../utils/solana/transaction';
 import { RPC } from '../../config';
@@ -14,6 +14,9 @@ const userStates = new Map<number, {
   recipientAddress?: string;
   amount?: number;
 }>();
+
+// Store transaction signatures temporarily with short IDs to avoid Telegram button data length limit
+const transactionSignatures = new Map<string, string>();
 
 /**
  * Handle send SPL menu
@@ -222,18 +225,25 @@ export async function handleSplAmountInput(ctx: any) {
   userState.step = 'confirm';
   userStates.set(userId, userState);
 
-  const confirmText = t('send.confirm_spl', {
-    sender: `${userState.senderWallet!.address.slice(0, 6)}...${userState.senderWallet!.address.slice(-6)}`,
-    recipient: `${userState.recipientAddress!.slice(0, 6)}...${userState.recipientAddress!.slice(-6)}`,
-    amount: amount.toString(),
-    token: `${userState.tokenMint!.slice(0, 6)}...${userState.tokenMint!.slice(-6)}`
-  });
+  const confirmText = `${t('send.confirm_spl_title')}\n\n` +
+    `${t('send.sender_wallet')}\n<code>${userState.senderWallet!.address}</code>\n\n` +
+    `${t('send.recipient_address')}\n<code>${userState.recipientAddress}</code>\n\n` +
+    `${t('send.token_address')}\n<code>${userState.tokenMint}</code>\n\n` +
+    `${t('send.transfer_quantity')} ${amount}\n\n` +
+    `${t('send.confirm_info')}`;
 
   await ctx.reply(confirmText, {
     parse_mode: 'HTML',
     reply_markup: Markup.inlineKeyboard([
       [
-        Markup.button.callback(t('buttons.confirm'), 'send_spl_confirm'),
+        Markup.button.callback(t('buttons.copy_sender'), `copy_sender_${userState.senderWallet!.address}`),
+        Markup.button.callback(t('buttons.copy_recipient'), `copy_recipient_${userState.recipientAddress}`)
+      ],
+      [
+        Markup.button.callback(t('buttons.copy_token'), `copy_token_${userState.tokenMint}`),
+        Markup.button.callback(t('buttons.confirm_transfer'), 'send_spl_confirm')
+      ],
+      [
         Markup.button.callback(t('buttons.cancel'), 'menu_main')
       ]
     ]).reply_markup,
@@ -274,6 +284,10 @@ export async function handleSendSplConfirm(ctx: any) {
     const recipientPubkey = new PublicKey(userState.recipientAddress);
     const tokenMintPubkey = new PublicKey(userState.tokenMint);
 
+    // Get token mint info to get decimals
+    const mintInfo = await getMint(connection, tokenMintPubkey);
+    const decimals = mintInfo.decimals;
+
     // Get token accounts
     const senderTokenAccount = await getAssociatedTokenAddress(
       tokenMintPubkey,
@@ -288,7 +302,7 @@ export async function handleSendSplConfirm(ctx: any) {
     // Check sender token balance
     try {
       const senderAccount = await getAccount(connection, senderTokenAccount);
-      const tokenAmount = userState.amount * Math.pow(10, 9); // Assuming 9 decimals, adjust as needed
+      const tokenAmount = userState.amount * Math.pow(10, decimals); // Use correct decimals
       
       if (Number(senderAccount.amount) < tokenAmount) {
         await ctx.editMessageText(t('send.insufficient_token_balance'), { parse_mode: 'HTML' });
@@ -301,36 +315,63 @@ export async function handleSendSplConfirm(ctx: any) {
       return;
     }
 
+    // Check if recipient token account exists, create if not
+    const instructions = [];
+    try {
+      await getAccount(connection, recipientTokenAccount);
+    } catch (error) {
+      // Recipient token account doesn't exist, create it
+      const createAccountInstruction = createAssociatedTokenAccountInstruction(
+        senderKeypair.publicKey, // payer
+        recipientTokenAccount,
+        recipientPubkey,
+        tokenMintPubkey
+      );
+      instructions.push(createAccountInstruction);
+    }
+
     // Create transfer instruction
     const transferInstruction = createTransferInstruction(
       senderTokenAccount,
       recipientTokenAccount,
       senderKeypair.publicKey,
-      userState.amount * Math.pow(10, 9), // Convert to smallest unit
+      userState.amount * Math.pow(10, decimals), // Use correct decimals
       [],
       TOKEN_PROGRAM_ID
     );
+    instructions.push(transferInstruction);
 
     // Create and send transaction
     const transaction = await createTransaction(
       connection,
       senderKeypair.publicKey,
-      [transferInstruction]
+      instructions
     );
 
     const signature = await sendTransaction(connection, transaction, [senderKeypair]);
 
-    const explorerUrl = `https://explorer.solana.com/tx/${signature}${RPC.includes("devnet") && "?cluster=devnet"}`;
+    const explorerUrl = `https://explorer.solana.com/tx/${signature}${RPC.includes("devnet") ? "?cluster=devnet" : ""}`;
 
-    const successText = t('tx.success_html', {
-      explorer_url: explorerUrl,
-      signature: signature.slice(0, 8) + '...' + signature.slice(-8)
-    });
+    // Generate short ID for transaction signature to avoid Telegram button data length limit
+    const shortId = `tx_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    transactionSignatures.set(shortId, signature);
+
+    const successText = `${t('send.spl_success_title')}\n\n` +
+      `${t('send.sender_wallet')}\n<code>${userState.senderWallet!.address}</code>\n\n` +
+      `${t('send.recipient_address')}\n<code>${userState.recipientAddress}</code>\n\n` +
+      `${t('send.token_address')}\n<code>${userState.tokenMint}</code>\n\n` +
+      `${t('send.transfer_quantity')} ${userState.amount}\n\n` +
+      `${t('send.transaction_hash')}\n<code>${signature}</code>\n\n` +
+      `${t('send.transaction_submitted')}`;
 
     await ctx.editMessageText(successText, {
       parse_mode: 'HTML',
       reply_markup: Markup.inlineKeyboard([
-        [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
+        [
+          Markup.button.callback(t('buttons.copy_tx'), `copy_tx_${shortId}`),
+          Markup.button.url(t('buttons.view_transaction'), explorerUrl)
+        ],
+        [Markup.button.callback(t('buttons.back_to_main_home'), 'menu_main')]
       ]).reply_markup,
     });
 
@@ -349,21 +390,51 @@ export async function handleSendSplConfirm(ctx: any) {
 }
 
 /**
+ * Handle copy actions for SPL
+ */
+export async function handleSplCopyAction(ctx: any) {
+  const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+  const data = ctx.callbackQuery?.data;
+  
+  if (!data) return;
+
+  let copyText = '';
+  let message = '';
+
+  if (data.startsWith('copy_sender_')) {
+    copyText = data.replace('copy_sender_', '');
+    message = t('send.copy_sender_feedback', { address: copyText });
+  } else if (data.startsWith('copy_recipient_')) {
+    copyText = data.replace('copy_recipient_', '');
+    message = t('send.copy_recipient_feedback', { address: copyText });
+  } else if (data.startsWith('copy_token_')) {
+    copyText = data.replace('copy_token_', '');
+    message = t('send.copy_token_feedback', { address: copyText });
+  } else if (data.startsWith('copy_tx_')) {
+    const shortId = data.replace('copy_tx_', '');
+    const fullSignature = transactionSignatures.get(shortId);
+    
+    if (fullSignature) {
+      copyText = fullSignature;
+      message = t('send.copy_tx_feedback', { txHash: copyText });
+      // Clean up the temporary storage after use
+      transactionSignatures.delete(shortId);
+    } else {
+      message = t('send.copy_tx_expired');
+    }
+  }
+
+  if (message) {
+    await ctx.answerCbQuery(message, { show_alert: true });
+  }
+}
+
+/**
  * Register send SPL actions
  */
 export function registerSendSplActions(bot: any) {
   bot.action('menu_send_spl', handleSendSpl);
   bot.action(/^send_spl_select_(\d+)$/, handleSendSplSelectSender);
   bot.action('send_spl_confirm', handleSendSplConfirm);
-
-  // Handle text input for token mint, recipient and amount
-  bot.on('text', async (ctx: any) => {
-    if (ctx.session?.waitingForSplTokenMint) {
-      await handleTokenMintInput(ctx);
-    } else if (ctx.session?.waitingForSplRecipient) {
-      await handleSplRecipientInput(ctx);
-    } else if (ctx.session?.waitingForSplAmount) {
-      await handleSplAmountInput(ctx);
-    }
-  });
+  bot.action(/^copy_(sender|recipient|token|tx)_/, handleSplCopyAction);
 }

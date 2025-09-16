@@ -3,10 +3,10 @@ import { handleGenerateWallets } from './src/commands/generateWallets';
 import { handleMyWallets, handleViewKey, handleRemoveWallet, handleAddNewWallet, handleWalletPagination } from './src/commands/myWallets';
 import { handleBackToMainMenu } from './src/utils/bot/navigation';
 import { registerHelpMenu } from './src/commands/help';
-import { registerMintActions } from './src/commands/mint';
+import { registerMintActions, handleMintTextInput } from './src/commands/mint';
 import { registerRefundActions } from './src/commands/refund';
-import { registerSendSolActions } from './src/commands/sendSol';
-import { registerSendSplActions } from './src/commands/sendSpl';
+import { registerSendSolActions, handleRecipientInput, handleAmountInput } from './src/commands/sendSol';
+import { registerSendSplActions, handleTokenMintInput, handleSplRecipientInput, handleSplAmountInput } from './src/commands/sendSpl';
 import { BOT_TOKEN, getInlineKeyboard } from './config';
 import { withI18n, SUPPORTED_LOCALES, LANGUAGE_NAMES, Locale } from './src/i18n/i18n';
 
@@ -100,6 +100,42 @@ registerMintActions(bot);
 registerRefundActions(bot);
 registerSendSolActions(bot);
 registerSendSplActions(bot);
+
+// Unified text handler for all text inputs
+bot.on('text', async (ctx: any) => {
+  const userId = ctx.from?.id;
+  const text = ctx.message?.text;
+  console.log(`=== 文本输入调试 ===`);
+  console.log(`用户ID: ${userId}`);
+  console.log(`输入文本: ${text}`);
+  console.log(`Session状态:`, ctx.session);
+  
+  // Handle mint text inputs (check first as it doesn't use session flags)
+  await handleMintTextInput(ctx);
+  
+  // Handle SOL sending text inputs
+  if (ctx.session?.waitingForSolRecipient) {
+    console.log(`处理SOL接收方地址输入: ${text}`);
+    await handleRecipientInput(ctx);
+  } else if (ctx.session?.waitingForSolAmount) {
+    console.log(`处理SOL金额输入: ${text}`);
+    await handleAmountInput(ctx);
+  }
+  // Handle SPL sending text inputs
+  else if (ctx.session?.waitingForSplTokenMint) {
+    console.log(`处理SPL代币mint地址输入: ${text}`);
+    await handleTokenMintInput(ctx);
+  } else if (ctx.session?.waitingForSplRecipient) {
+    console.log(`处理SPL接收方地址输入: ${text}`);
+    await handleSplRecipientInput(ctx);
+  } else if (ctx.session?.waitingForSplAmount) {
+    console.log(`处理SPL金额输入: ${text}`);
+    await handleSplAmountInput(ctx);
+  } else {
+    console.log(`没有匹配的文本处理器`);
+  }
+  console.log(`==================`);
+});
 
 bot.action('menu_main', (ctx) => handleBackToMainMenu(ctx));
 
