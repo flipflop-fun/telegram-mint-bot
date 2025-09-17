@@ -7,15 +7,19 @@ import {
   loadKeypairFromBase58,
   refundToken
 } from '@flipflop-sdk/node';
+import { UserStateManager, UserState } from '../utils/stateManager';
 
-// Store user states for the refund flow
-const userStates = new Map<number, {
+// 定义退款流程的状态类型
+interface RefundState extends UserState {
   step: 'enter_mint_address' | 'select_wallet' | 'confirm_refund' | 'processing';
-  refundData?: {
+  data?: {
     mintAddress?: string;
     selectedWallet?: { address: string; private_key: string };
   };
-}>();
+}
+
+// 创建退款流程专用的状态管理器
+const refundStateManager = new UserStateManager<RefundState>();
 
 /**
  * Handle refund menu
@@ -30,8 +34,10 @@ export async function handleRefund(ctx: any) {
   }
 
   // Initialize user state
-  const state = { step: 'enter_mint_address' as const, refundData: {} };
-  userStates.set(userId, state);
+  refundStateManager.setState(userId, { 
+    step: 'enter_mint_address' as const, 
+    data: {} 
+  });
 
   // Set session flag to indicate we're waiting for refund mint address input
   ctx.session = ctx.session || {};
@@ -77,7 +83,7 @@ export async function handleRefundTextInput(ctx: any) {
     return;
   }
 
-  const state = userStates.get(userId);
+  const state = refundStateManager.getState(userId);
   if (!state) {
     await ctx.reply(t('refund.session_expired'));
     return;
@@ -194,11 +200,10 @@ async function handleMintAddressInput(ctx: any, userId: number, text: string, t:
       // 如果只有一个钱包，直接选择并跳转到确认
       if (wallets.length === 1) {
         const selectedWallet = wallets[0];
-        userStates.set(userId, {
-          ...state,
+        refundStateManager.updateState(userId, {
           step: 'confirm_refund',
-          refundData: {
-            ...state.refundData,
+          data: {
+            ...state.data,
             mintAddress: text,
             selectedWallet
           }
@@ -230,11 +235,10 @@ async function handleMintAddressInput(ctx: any, userId: number, text: string, t:
       });
       
       // 更新状态为钱包选择步骤
-      userStates.set(userId, {
-        ...state,
+      refundStateManager.updateState(userId, {
         step: 'select_wallet',
-        refundData: {
-          ...state.refundData,
+        data: {
+          ...state.data,
           mintAddress: text
         }
       });
@@ -325,8 +329,8 @@ export async function handleRefundConfirmation(ctx: any) {
     });
     return;
   }
-  const state = userStates.get(userId);
-  if (!state || !state.refundData?.mintAddress || !state.refundData?.selectedWallet) {
+  const state = refundStateManager.getState(userId);
+  if (!state || !state.data?.mintAddress || !state.data?.selectedWallet) {
     await ctx.editMessageText(t('refund.session_expired'), {
       reply_markup: {
         inline_keyboard: [
@@ -339,20 +343,20 @@ export async function handleRefundConfirmation(ctx: any) {
 
   try {
     // Update state to processing
-    userStates.set(userId, { ...state, step: 'processing' });
+    refundStateManager.updateState(userId, { step: 'processing' });
     // Show processing message
     await ctx.editMessageText(
-      t('refund.processing', { mintAddress: state.refundData.mintAddress }),
+      t('refund.processing', { mintAddress: state.data.mintAddress }),
       { parse_mode: 'HTML' }
     );
-    const refundWallet = state.refundData.selectedWallet;
+    const refundWallet = state.data.selectedWallet;
     try {
       // Load keypair with error handling
       const keypair = loadKeypairFromBase58(refundWallet.private_key);
       // Get token information with timeout
       const tokenInfoPromise = getMintData({
         rpc: RPC,
-        mint: new PublicKey(state.refundData.mintAddress)
+        mint: new PublicKey(state.data.mintAddress)
       });
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Token info fetch timeout')), 30000);
@@ -366,7 +370,7 @@ export async function handleRefundConfirmation(ctx: any) {
       // Execute the actual refund using flipflop SDK with timeout
       const refundPromise = refundToken({
         rpc: RPC,
-        mint: new PublicKey(state.refundData.mintAddress),
+        mint: new PublicKey(state.data.mintAddress),
         owner: keypair
       });
       const refundTimeoutPromise = new Promise((_, reject) => {
@@ -378,7 +382,7 @@ export async function handleRefundConfirmation(ctx: any) {
         throw new Error(errorMsg);
       }
       const successMessage = t('refund.success', {
-        mintAddress: state.refundData.mintAddress,
+        mintAddress: state.data.mintAddress,
         tokenName: tokenInfo.name || t('mint_data.no_name'),
         signature: refundResult.signature || 'N/A'
       });
@@ -426,7 +430,7 @@ export async function handleRefundConfirmation(ctx: any) {
     }
 
     // Clean up state and session
-    userStates.delete(userId);
+    refundStateManager.clearState(userId);
     ctx.session = ctx.session || {};
     ctx.session.waitingForRefundMintAddress = false;
 
@@ -450,7 +454,7 @@ export async function handleRefundConfirmation(ctx: any) {
     });
     
     // Clean up state and session
-    userStates.delete(userId);
+    refundStateManager.clearState(userId);
     ctx.session = ctx.session || {};
     ctx.session.waitingForRefundMintAddress = false;
   }
@@ -464,7 +468,7 @@ export async function handleRefundCancellation(ctx: any) {
   const userId = ctx.from?.id;
   
   if (userId) {
-    userStates.delete(userId);
+    refundStateManager.clearState(userId);
   }
 
   // Clear session flag
@@ -498,7 +502,7 @@ export function registerRefundActions(bot: any) {
       return;
     }
 
-    const state = userStates.get(userId);
+    const state = refundStateManager.getState(userId);
     if (!state || state.step !== 'select_wallet') {
       await ctx.reply(t('refund.session_expired'));
       return;
@@ -521,11 +525,10 @@ export function registerRefundActions(bot: any) {
     const selectedWallet = wallets[walletIndex];
     
     // 更新状态并直接跳转到确认
-    userStates.set(userId, {
-      ...state,
+    refundStateManager.updateState(userId, {
       step: 'confirm_refund',
-      refundData: {
-        ...state.refundData,
+      data: {
+        ...state.data,
         selectedWallet: selectedWallet
       }
     });
@@ -533,7 +536,7 @@ export function registerRefundActions(bot: any) {
     // 显示确认消息
     await ctx.editMessageText(
       t('refund.confirm_refund', { 
-        mintAddress: state.refundData?.mintAddress,
+        mintAddress: state.data?.mintAddress,
         wallet: `${selectedWallet.address.slice(0, 8)}...${selectedWallet.address.slice(-8)}`
       }),
       {

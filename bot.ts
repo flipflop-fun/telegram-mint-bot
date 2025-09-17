@@ -68,6 +68,12 @@ bot.action('menu_language', async (ctx) => {
   const buttons = SUPPORTED_LOCALES.map((loc: Locale) => [
     { text: `${LANGUAGE_NAMES[loc]}`, callback_data: `set_lang_${loc}` },
   ]);
+  
+  // Add close button
+  buttons.push([
+    { text: t('buttons.close'), callback_data: 'close_language_menu' }
+  ]);
+  
   await ctx.reply(t('lang.menu_title'), {
     reply_markup: {
       inline_keyboard: buttons,
@@ -88,6 +94,12 @@ bot.action(/^set_lang_(.+)$/, async (ctx) => {
   
   // Re-render main menu in the selected language by editing the current message
   await renderMainMenu(ctx, true);
+});
+
+// Close language menu handler
+bot.action('close_language_menu', async (ctx) => {
+  await ctx.answerCbQuery();
+  await ctx.deleteMessage();
 });
 
 handleGenerateWallets(bot);

@@ -9,7 +9,6 @@ export function registerHelpMenu(bot: any) {
     const helpMessage = await ctx.reply(t('help.text'), {
       parse_mode: 'HTML',
       reply_markup: Markup.inlineKeyboard([
-        [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')],
         [Markup.button.callback(t('buttons.close'), 'close_help_message')],
       ]).reply_markup,
     });

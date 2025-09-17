@@ -10,11 +10,12 @@ import {
   MintTokenOptions,
 } from '@flipflop-sdk/node';
 import { PublicKey } from '@solana/web3.js';
+import { UserStateManager, UserState } from '../utils/stateManager';
 
-// Store user states for the mint flow
-const userStates = new Map<number, {
+// Define mint state interface
+interface MintState extends UserState {
   step: 'select_action' | 'launch_token' | 'enter_name' | 'enter_symbol' | 'enter_description' | 'enter_image_url' | 'select_token_type' | 'confirm_launch' | 'mint_existing' | 'enter_mint_address' | 'enter_urc' | 'select_minter' | 'enter_batch_count' | 'confirm_mint' | 'confirm_batch_mint';
-  tokenData?: {
+  data?: {
     name?: string;
     symbol?: string;
     description?: string;
@@ -24,24 +25,27 @@ const userStates = new Map<number, {
     urc?: string;
     minterWallet?: { address: string; private_key: string };
     batchCount?: number;
+    batchMintResults?: {
+      successful: number;
+      failed: number;
+      total: number;
+      currentIndex: number;
+      results: Array<{ success: boolean; signature?: string; error?: string }>;
+    };
+    lastMintData?: {
+      mintAddress: string;
+      signature: string;
+    };
   };
-  batchMintResults?: {
-    successful: number;
-    failed: number;
-    total: number;
-    currentIndex: number;
-    results: Array<{ success: boolean; signature?: string; error?: string }>;
-  };
-  lastMintData?: {
-    mintAddress: string;
-    signature: string;
-  };
-}>();
+}
+
+// Create mint state manager instance
+const mintStateManager = new UserStateManager<MintState>();
 
 /**
  * Handle mint tokens menu - directly start mint existing token flow
  */
-export async function handleMint(ctx: any) {
+async function handleMint(ctx: any) {
   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   const userId = ctx.from?.id;
   
@@ -51,8 +55,7 @@ export async function handleMint(ctx: any) {
   }
 
   // Initialize user state and directly go to mint existing token flow
-  const state = { step: 'enter_mint_address' as const, tokenData: {} };
-  userStates.set(userId, state);
+  mintStateManager.setState(userId, { step: 'enter_mint_address', data: {} });
 
   try {
     const message = t('mint.enter_mint_address');
@@ -83,7 +86,7 @@ export async function handleMint(ctx: any) {
 /**
  * Handle launch new token flow
  */
-export async function handleLaunchNewToken(ctx: any) {
+async function handleLaunchNewToken(ctx: any) {
   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   const userId = ctx.from?.id;
   
@@ -92,10 +95,10 @@ export async function handleLaunchNewToken(ctx: any) {
     return;
   }
 
-  const state = userStates.get(userId) || { step: 'launch_token' };
-  state.step = 'enter_name';
-  state.tokenData = {};
-  userStates.set(userId, state);
+  mintStateManager.setState(userId, { 
+    step: 'enter_name', 
+    data: {} 
+  });
 
   await ctx.reply(t('mint.enter_token_name'), {
     reply_markup: Markup.inlineKeyboard([
@@ -119,36 +122,36 @@ export async function handleMintTextInput(ctx: any) {
     return;
   }
 
-  const state = userStates.get(userId);
+  const state = mintStateManager.getState(userId);
   console.log(`handleMintTextInput: user status:`, state);
-  if (!state || !state.tokenData) {
-    console.log(`handleMintTextInput: no mint status or tokenData, exit`);
+  if (!state || !state.data) {
+    console.log(`handleMintTextInput: no mint status or data, exit`);
     return;
   }
 
   try {
     switch (state.step) {
       case 'enter_name':
-        state.tokenData.name = text;
+        state.data.name = text;
         state.step = 'enter_symbol';
         await ctx.reply(t('mint.enter_token_symbol'));
         break;
 
       case 'enter_symbol':
-        state.tokenData.symbol = text.toUpperCase();
+        state.data.symbol = text.toUpperCase();
         state.step = 'enter_description';
         await ctx.reply(t('mint.enter_token_description'));
         break;
 
       case 'enter_description':
-        state.tokenData.description = text;
+        state.data.description = text;
         state.step = 'enter_image_url';
         await ctx.reply(t('mint.enter_image_url'));
         break;
 
       case 'enter_image_url':
         if (text.toLowerCase() !== '跳过' && text.toLowerCase() !== 'skip') {
-          state.tokenData.imageUrl = text;
+          state.data.imageUrl = text;
         }
         state.step = 'select_token_type';
         await ctx.reply(t('mint.select_token_type'), {
@@ -163,7 +166,7 @@ export async function handleMintTextInput(ctx: any) {
       case 'enter_mint_address':
         try {
           new PublicKey(text); // Validate address
-          state.tokenData.mintAddress = text;
+          state.data.mintAddress = text;
           state.step = 'enter_urc';
           await ctx.reply(t('mint.enter_urc_code'), {
             reply_markup: Markup.inlineKeyboard([
@@ -176,7 +179,7 @@ export async function handleMintTextInput(ctx: any) {
         break;
 
       case 'enter_urc':
-        state.tokenData.urc = text;
+        state.data.urc = text;
         state.step = 'select_minter';
         await showMinterSelection(ctx, userId, t);
         break;
@@ -189,13 +192,13 @@ export async function handleMintTextInput(ctx: any) {
           return;
         }
 
-        state.tokenData.batchCount = batchCount;
+        state.data.batchCount = batchCount;
         state.step = 'confirm_batch_mint';
 
         const confirmText = t('mint.confirm_batch_mint', {
-          mintAddress: state.tokenData.mintAddress,
-          urc: state.tokenData.urc,
-          wallet: state.tokenData.minterWallet?.address,
+          mintAddress: state.data.mintAddress,
+          urc: state.data.urc,
+          wallet: state.data.minterWallet?.address,
           batchCount: batchCount
         });
 
@@ -212,7 +215,7 @@ export async function handleMintTextInput(ctx: any) {
         break;
     }
 
-    userStates.set(userId, state);
+    mintStateManager.updateState(userId, state);
   } catch (error) {
     console.error('Error in handleMintTextInput:', error);
     await ctx.reply(t('common.error_try_again'));
@@ -252,7 +255,7 @@ async function showMinterSelection(ctx: any, userId: number, t: any) {
 /**
  * Handle token type selection
  */
-export async function handleTokenTypeSelection(ctx: any) {
+async function handleTokenTypeSelection(ctx: any) {
   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   const userId = ctx.from?.id;
   const data = ctx.callbackQuery?.data;
@@ -261,22 +264,22 @@ export async function handleTokenTypeSelection(ctx: any) {
     return;
   }
 
-  const state = userStates.get(userId);
-  if (!state || !state.tokenData) {
+  const state = mintStateManager.getState(userId);
+  if (!state || !state.data) {
     return;
   }
 
   const tokenType = data === 'token_type_meme' ? 'meme' : 'standard';
-  state.tokenData.tokenType = tokenType;
+  state.data.tokenType = tokenType;
   state.step = 'confirm_launch';
 
   const confirmText = t('mint.confirm_launch', {
-    name: state.tokenData.name,
-    symbol: state.tokenData.symbol,
-    description: state.tokenData.description,
-    image: state.tokenData.imageUrl || t('common.na'),
+    name: state.data.name,
+    symbol: state.data.symbol,
+    description: state.data.description,
+    image: state.data.imageUrl || t('common.na'),
     type: tokenType === 'meme' ? t('mint.token_type_meme') : t('mint.token_type_standard'),
-    wallet: state.tokenData.minterWallet?.address || ''
+    wallet: state.data.minterWallet?.address || ''
   });
 
   await ctx.editMessageText(confirmText, {
@@ -287,13 +290,13 @@ export async function handleTokenTypeSelection(ctx: any) {
     ]).reply_markup,
   });
 
-  userStates.set(userId, state);
+  mintStateManager.updateState(userId, state);
 }
 
 /**
  * Handle minter wallet selection
  */
-export async function handleMinterSelection(ctx: any) {
+async function handleMinterSelection(ctx: any) {
   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   const userId = ctx.from?.id;
   const data = ctx.callbackQuery?.data;
@@ -310,12 +313,12 @@ export async function handleMinterSelection(ctx: any) {
     return;
   }
 
-  const state = userStates.get(userId);
-  if (!state || !state.tokenData) {
+  const state = mintStateManager.getState(userId);
+  if (!state || !state.data) {
     return;
   }
 
-  state.tokenData.minterWallet = wallets[walletIndex];
+  state.data.minterWallet = wallets[walletIndex];
   state.step = 'enter_batch_count';
 
   await ctx.editMessageText(t('mint.enter_batch_count'), {
@@ -324,111 +327,111 @@ export async function handleMinterSelection(ctx: any) {
     ]).reply_markup,
   });
 
-  userStates.set(userId, state);
+  mintStateManager.updateState(userId, state);
 }
 
 /**
  * Handle token launch confirmation
  */
-export async function handleTokenLaunchConfirmation(ctx: any) {
-  const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
-  const userId = ctx.from?.id;
+// async function handleTokenLaunchConfirmation(ctx: any) {
+//   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+//   const userId = ctx.from?.id;
 
-  if (!userId) {
-    return;
-  }
+//   if (!userId) {
+//     return;
+//   }
 
-  const state = userStates.get(userId);
-  if (!state || !state.tokenData) {
-    await ctx.reply(t('common.error_try_again'));
-    return;
-  }
+//   const state = mintStateManager.getState(userId);
+//   if (!state || !state.data) {
+//     await ctx.reply(t('common.error_try_again'));
+//     return;
+//   }
 
-  const wallets = getUserWallets(userId);
-  if (wallets.length === 0) {
-    await ctx.reply(t('wallet.no_wallets'));
-    return;
-  }
+//   const wallets = getUserWallets(userId);
+//   if (wallets.length === 0) {
+//     await ctx.reply(t('wallet.no_wallets'));
+//     return;
+//   }
 
-  try {
-    await ctx.editMessageText(t('mint.processing'), {
-      parse_mode: 'HTML',
-    });
+//   try {
+//     await ctx.editMessageText(t('mint.processing'), {
+//       parse_mode: 'HTML',
+//     });
 
-    const { name, symbol, description, imageUrl, tokenType } = state.tokenData;
+//     const { name, symbol, description, imageUrl, tokenType } = state.data;
     
-    // Use the first wallet as the launcher
-    const launcherWallet = wallets[0];
+//     // Use the first wallet as the launcher
+//     const launcherWallet = wallets[0];
     
-    let metadataUrl = '';
+//     let metadataUrl = '';
     
-    // Generate metadata if image URL is provided
-    if (imageUrl) {
-      try {
-        const metadataResult = await generateMetadataUri({
-          rpc: RPC,
-          name: name!,
-          symbol: symbol!,
-          description: description!,
-          imagePath: imageUrl, // Using URL instead of local path
-        });
+//     // Generate metadata if image URL is provided
+//     if (imageUrl) {
+//       try {
+//         const metadataResult = await generateMetadataUri({
+//           rpc: RPC,
+//           name: name!,
+//           symbol: symbol!,
+//           description: description!,
+//           imagePath: imageUrl, // Using URL instead of local path
+//         });
         
-        if (metadataResult.success && metadataResult.data?.metadataUrl) {
-          metadataUrl = metadataResult.data.metadataUrl;
-        }
-      } catch (metadataError) {
-        console.error('Metadata generation failed:', metadataError);
-        // Continue without metadata
-      }
-    }
+//         if (metadataResult.success && metadataResult.data?.metadataUrl) {
+//           metadataUrl = metadataResult.data.metadataUrl;
+//         }
+//       } catch (metadataError) {
+//         console.error('Metadata generation failed:', metadataError);
+//         // Continue without metadata
+//       }
+//     }
 
-    const launchOptions: LaunchTokenOptions = {
-      rpc: RPC,
-      name: name!,
-      symbol: symbol!,
-      tokenType: tokenType!,
-      uri: metadataUrl,
-      creator: loadKeypairFromBase58(launcherWallet.private_key),
-    };
+//     const launchOptions: LaunchTokenOptions = {
+//       rpc: RPC,
+//       name: name!,
+//       symbol: symbol!,
+//       tokenType: tokenType!,
+//       uri: metadataUrl,
+//       creator: loadKeypairFromBase58(launcherWallet.private_key),
+//     };
 
-    const launchResult = await launchToken(launchOptions);
+//     const launchResult = await launchToken(launchOptions);
 
-    if (launchResult.success && launchResult.data) {
-      const successText = t('mint.launch_success', {
-        mintAddress: launchResult.data.mintAddress.toString(),
-        signature: launchResult.data.transactionHash,
-        wallet: launcherWallet.address
-      });
+//     if (launchResult.success && launchResult.data) {
+//       const successText = t('mint.launch_success', {
+//         mintAddress: launchResult.data.mintAddress.toString(),
+//         signature: launchResult.data.transactionHash,
+//         wallet: launcherWallet.address
+//       });
 
-      await ctx.editMessageText(successText, {
-        parse_mode: 'HTML',
-        reply_markup: Markup.inlineKeyboard([
-          [Markup.button.callback(t('mint.mint_this_token'), `mint_token_${launchResult.data.mintAddress.toString()}`)],
-          [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
-        ]).reply_markup,
-      });
-    } else {
-       throw new Error(launchResult.message || 'Unknown launch error');
-     }
+//       await ctx.editMessageText(successText, {
+//         parse_mode: 'HTML',
+//         reply_markup: Markup.inlineKeyboard([
+//           [Markup.button.callback(t('mint.mint_this_token'), `mint_token_${launchResult.data.mintAddress.toString()}`)],
+//           [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
+//         ]).reply_markup,
+//       });
+//     } else {
+//        throw new Error(launchResult.message || 'Unknown launch error');
+//      }
 
-    // Clear user state
-    userStates.delete(userId);
+//     // Clear user state
+//     mintStateManager.clearState(userId);
 
-  } catch (error) {
-    console.error('Error launching token:', error);
-    await ctx.editMessageText(t('mint.launch_failed', { error: error }), {
-      parse_mode: 'HTML',
-      reply_markup: Markup.inlineKeyboard([
-        [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
-      ]).reply_markup,
-    });
-  }
-}
+//   } catch (error) {
+//     console.error('Error launching token:', error);
+//     await ctx.editMessageText(t('mint.launch_failed', { error: error }), {
+//       parse_mode: 'HTML',
+//       reply_markup: Markup.inlineKeyboard([
+//         [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
+//       ]).reply_markup,
+//     });
+//   }
+// }
 
 /**
  * Handle batch mint confirmation
  */
-export async function handleBatchMint(ctx: any) {
+async function handleBatchMint(ctx: any) {
   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   const userId = ctx.from?.id;
 
@@ -436,14 +439,14 @@ export async function handleBatchMint(ctx: any) {
     return;
   }
 
-  const state = userStates.get(userId);
-  if (!state || !state.tokenData || !state.tokenData.minterWallet) {
+  const state = mintStateManager.getState(userId);
+  if (!state || !state.data || !state.data.minterWallet) {
     await ctx.reply(t('common.error_try_again'));
     return;
   }
 
   try {
-    const { mintAddress, urc, minterWallet, batchCount } = state.tokenData;
+    const { mintAddress, urc, minterWallet, batchCount } = state.data;
     
     // Show initial processing message with variables
     await ctx.editMessageText(t('mint.batch_processing', {
@@ -454,7 +457,7 @@ export async function handleBatchMint(ctx: any) {
     });
     
     // Initialize batch mint results
-    state.batchMintResults = {
+    state.data.batchMintResults = {
       successful: 0,
       failed: 0,
       total: batchCount || 1,
@@ -465,7 +468,7 @@ export async function handleBatchMint(ctx: any) {
     const minter = loadKeypairFromBase58(minterWallet.private_key);
     
     for (let i = 0; i < (batchCount || 1); i++) {
-      state.batchMintResults.currentIndex = i + 1;
+      state.data.batchMintResults.currentIndex = i + 1;
       
       try {
         const mintOptions: MintTokenOptions = {
@@ -478,8 +481,8 @@ export async function handleBatchMint(ctx: any) {
         const mintResult = await mintToken(mintOptions);
 
         if (mintResult.success && mintResult.data) {
-          state.batchMintResults.successful++;
-          state.batchMintResults.results.push({
+          state.data.batchMintResults.successful++;
+          state.data.batchMintResults.results.push({
             success: true,
             signature: mintResult.data.tx
           });
@@ -497,21 +500,20 @@ export async function handleBatchMint(ctx: any) {
           const explorerUrl = `https://explorer.solana.com/tx/${mintResult.data.tx}${RPC.includes("devnet") ? "?cluster=devnet" : ""}`;
           
           // Store mint data for copy actions
-          state.lastMintData = { mintAddress, signature: mintResult.data.tx };
+          state.data.lastMintData = { mintAddress, signature: mintResult.data.tx };
           
           await ctx.reply(successMsg, { 
             parse_mode: 'HTML',
             reply_markup: Markup.inlineKeyboard([
               [
-                Markup.button.callback(t('buttons.copy_mint_address'), 'copy_last_mint'),
-                Markup.button.callback(t('buttons.copy_tx'), 'copy_last_tx')
-              ],
-              [Markup.button.url(t('buttons.view_transaction'), explorerUrl)]
+                Markup.button.callback(t('buttons.copy_tx'), 'copy_last_tx'),
+                Markup.button.url(t('buttons.view_transaction'), explorerUrl)
+              ]
             ]).reply_markup,
           });
         } else {
-          state.batchMintResults.failed++;
-          state.batchMintResults.results.push({
+          state.data.batchMintResults.failed++;
+          state.data.batchMintResults.results.push({
             success: false,
             error: mintResult.message || 'Unknown error'
           });
@@ -525,8 +527,8 @@ export async function handleBatchMint(ctx: any) {
           await ctx.reply(failMsg, { parse_mode: 'HTML' });
         }
       } catch (error) {
-        state.batchMintResults.failed++;
-        state.batchMintResults.results.push({
+        state.data.batchMintResults.failed++;
+        state.data.batchMintResults.results.push({
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error'
         });
@@ -546,9 +548,9 @@ export async function handleBatchMint(ctx: any) {
       mintAddress: mintAddress,
       wallet: minterWallet.address,
       urc: urc,
-      successful: state.batchMintResults.successful,
-      total: state.batchMintResults.total,
-      failed: state.batchMintResults.failed
+      successful: state.data.batchMintResults.successful,
+      total: state.data.batchMintResults.total,
+      failed: state.data.batchMintResults.failed
     });
 
     await ctx.reply(completeText, {
@@ -559,7 +561,7 @@ export async function handleBatchMint(ctx: any) {
     });
 
     // Clear user state
-    userStates.delete(userId);
+    mintStateManager.clearState(userId);
 
   } catch (error) {
     console.error('Error in batch mint:', error);
@@ -574,102 +576,128 @@ export async function handleBatchMint(ctx: any) {
 /**
  * Handle token mint confirmation
  */
-export async function handleTokenMintConfirmation(ctx: any) {
-  const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
-  const userId = ctx.from?.id;
+// async function handleTokenMintConfirmation(ctx: any) {
+//   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+//   const userId = ctx.from?.id;
 
-  if (!userId) {
+//   if (!userId) {
+//     return;
+//   }
+
+//   const state = mintStateManager.getState(userId);
+//   if (!state || !state.data || !state.data.minterWallet) {
+//     await ctx.reply(t('common.error_try_again'));
+//     return;
+//   }
+
+//   try {
+//     await ctx.editMessageText(t('mint.processing'), {
+//       parse_mode: 'HTML',
+//     });
+
+//     const { mintAddress, urc, minterWallet } = state.data;
+    
+//     const minter = loadKeypairFromBase58(minterWallet.private_key);
+    
+//     const mintOptions: MintTokenOptions = {
+//       rpc: RPC,
+//       mint: new PublicKey(mintAddress!),
+//       urc: urc!,
+//       minter,
+//     };
+
+//     const mintResult = await mintToken(mintOptions);
+
+//     if (mintResult.success && mintResult.data) {
+//       const signature = mintResult.data.tx;
+//       const explorerUrl = `https://explorer.solana.com/tx/${signature}${RPC.includes("devnet") ? "?cluster=devnet" : ""}`;
+      
+//       const successText = t('mint.mint_success', {
+//         mintAddress: mintAddress,
+//         signature: signature,
+//         wallet: minterWallet.address,
+//         urc: urc
+//       });
+
+//       // Store mint data for copy actions
+//       const userId = ctx.from.id;
+//       const currentState = mintStateManager.getState(userId) || { step: 'select_action', data: {} };
+//       if (!currentState.data) {
+//         currentState.data = {};
+//       }
+//       (currentState.data as any).lastMintData = { mintAddress, signature };
+//       mintStateManager.updateState(userId, currentState);
+
+//       await ctx.editMessageText(successText, {
+//         parse_mode: 'HTML',
+//         reply_markup: Markup.inlineKeyboard([
+//           [
+//             Markup.button.callback(t('buttons.copy_tx'), 'copy_last_tx'),
+//             Markup.button.url(t('buttons.view_transaction'), explorerUrl),
+//           ],
+//           [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
+//         ]).reply_markup,
+//       });
+//     } else {
+//       throw new Error(mintResult.message || 'Unknown mint error');
+//     }
+
+//     // Clear user state
+//     mintStateManager.clearState(userId);
+
+//   } catch (error) {
+//     console.error('Error minting token:', error);
+//     await ctx.editMessageText(t('mint.mint_failed', { error: error }), {
+//       parse_mode: 'HTML',
+//       reply_markup: Markup.inlineKeyboard([
+//         [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
+//       ]).reply_markup,
+//     });
+//   }
+// }
+
+// Handle copy actions for mint addresses and transaction signatures
+async function handleMintCopyAction(ctx: any) {
+  const t = ctx.t;
+  const userId = ctx.from?.id;
+  const data = ctx.callbackQuery?.data;
+
+  if (!userId || !data) {
     return;
   }
 
-  const state = userStates.get(userId);
-  if (!state || !state.tokenData || !state.tokenData.minterWallet) {
-    await ctx.reply(t('common.error_try_again'));
+  const state = mintStateManager.getState(userId);
+  if (!state || !state.data?.lastMintData) {
+    await ctx.answerCbQuery(t('common.no_data_to_copy'));
     return;
   }
 
   try {
-    await ctx.editMessageText(t('mint.processing'), {
-      parse_mode: 'HTML',
-    });
+    let textToCopy = '';
+    let successMessage = '';
 
-    const { mintAddress, urc, minterWallet } = state.tokenData;
-    
-    const minter = loadKeypairFromBase58(minterWallet.private_key);
-    
-    const mintOptions: MintTokenOptions = {
-      rpc: RPC,
-      mint: new PublicKey(mintAddress!),
-      urc: urc!,
-      minter,
-    };
+    if (data === 'copy_last_mint') {
+      textToCopy = state.data.lastMintData.mintAddress;
+      successMessage = t('common.mint_address_copied');
+    } else if (data === 'copy_last_tx') {
+      textToCopy = state.data.lastMintData.signature;
+      successMessage = t('common.tx_copied');
+    }
 
-    const mintResult = await mintToken(mintOptions);
-
-    if (mintResult.success && mintResult.data) {
-      const signature = mintResult.data.tx;
-      const explorerUrl = `https://explorer.solana.com/tx/${signature}${RPC.includes("devnet") ? "?cluster=devnet" : ""}`;
-      
-      const successText = t('mint.mint_success', {
-        mintAddress: mintAddress,
-        signature: signature,
-        wallet: minterWallet.address,
-        urc: urc
-      });
-
-      // Store mint data for copy actions
-      const userId = ctx.from.id;
-      const state = userStates.get(userId) || { step: 'select_action' };
-      state.lastMintData = { mintAddress, signature };
-      userStates.set(userId, state);
-
-      await ctx.editMessageText(successText, {
-        parse_mode: 'HTML',
+    if (textToCopy) {
+      // Send the text to copy in a message that can be easily copied
+      await ctx.reply(`\`${textToCopy}\``, { 
+        parse_mode: 'MarkdownV2',
         reply_markup: Markup.inlineKeyboard([
-          [
-            Markup.button.callback(t('buttons.copy_mint_address'), 'copy_last_mint'),
-            Markup.button.callback(t('buttons.copy_tx'), 'copy_last_tx')
-          ],
-          [Markup.button.url(t('buttons.view_transaction'), explorerUrl)],
           [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
         ]).reply_markup,
       });
-    } else {
-      throw new Error(mintResult.message || 'Unknown mint error');
+      
+      await ctx.answerCbQuery(successMessage);
     }
-
-    // Clear user state
-    userStates.delete(userId);
-
   } catch (error) {
-    console.error('Error minting token:', error);
-    await ctx.editMessageText(t('mint.mint_failed', { error: error }), {
-      parse_mode: 'HTML',
-      reply_markup: Markup.inlineKeyboard([
-        [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
-      ]).reply_markup,
-    });
-  }
-}
-
-// Handle copy actions for mint addresses and transaction signatures
-export async function handleMintCopyAction(ctx: any) {
-  const t = ctx.t;
-  const callbackData = ctx.callbackQuery.data;
-  const userId = ctx.from.id;
-  const state = userStates.get(userId);
-  
-  if (!state || !state.lastMintData) {
-    await ctx.answerCbQuery('❌ 没有可复制的数据');
-    return;
-  }
-  
-  if (callbackData === 'copy_last_mint') {
-    await ctx.answerCbQuery(t('copy.address_copied'));
-    await ctx.reply(`\`${state.lastMintData.mintAddress}\``, { parse_mode: 'MarkdownV2' });
-  } else if (callbackData === 'copy_last_tx') {
-    await ctx.answerCbQuery(t('copy.tx_copied'));
-    await ctx.reply(`\`${state.lastMintData.signature}\``, { parse_mode: 'MarkdownV2' });
+    console.error('Error in handleMintCopyAction:', error);
+    await ctx.answerCbQuery(t('common.error_try_again'));
   }
 }
 
@@ -681,8 +709,8 @@ export function registerMintActions(bot: any) {
   bot.action('mint_launch_new', handleLaunchNewToken);
   bot.action('token_type_meme', handleTokenTypeSelection);
   bot.action('token_type_standard', handleTokenTypeSelection);
-  bot.action('confirm_token_launch', handleTokenLaunchConfirmation);
-  bot.action('confirm_token_mint', handleTokenMintConfirmation);
+  // bot.action('confirm_token_launch', handleTokenLaunchConfirmation);
+  // bot.action('confirm_token_mint', handleTokenMintConfirmation);
   bot.action('confirm_batch_mint', handleBatchMint);
   
   // Handle minter selection

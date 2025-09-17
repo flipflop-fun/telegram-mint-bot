@@ -5,15 +5,21 @@ import { getUserWallets } from '../services/db';
 import { createTransaction, sendTransaction } from '../utils/solana/transaction';
 import { RPC } from '../../config';
 import bs58 from 'bs58';
+import { UserStateManager, UserState } from '../utils/stateManager';
 
-// Store user states for the send SPL flow
-const userStates = new Map<number, {
+// Define send SPL state interface
+interface SendSplState extends UserState {
   step: 'select_sender' | 'enter_token' | 'enter_recipient' | 'enter_amount' | 'confirm';
-  senderWallet?: { address: string; private_key: string };
-  tokenMint?: string;
-  recipientAddress?: string;
-  amount?: number;
-}>();
+  data: {
+    senderWallet?: { address: string; private_key: string };
+    tokenMint?: string;
+    recipientAddress?: string;
+    amount?: number;
+  };
+}
+
+// Create send SPL state manager instance
+const sendSplStateManager = new UserStateManager<SendSplState>();
 
 // Store transaction signatures temporarily with short IDs to avoid Telegram button data length limit
 const transactionSignatures = new Map<string, string>();
@@ -21,7 +27,7 @@ const transactionSignatures = new Map<string, string>();
 /**
  * Handle send SPL menu
  */
-export async function handleSendSpl(ctx: any) {
+async function handleSendSpl(ctx: any) {
   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   const userId = ctx.from?.id;
 
@@ -31,7 +37,7 @@ export async function handleSendSpl(ctx: any) {
   }
 
   // Reset user state
-  userStates.set(userId, { step: 'select_sender' });
+  sendSplStateManager.setState(userId, { step: 'select_sender', data: {} });
 
   const menuText = t('send.spl_title');
   
@@ -80,7 +86,7 @@ export async function handleSendSpl(ctx: any) {
 /**
  * Handle sender wallet selection
  */
-export async function handleSendSplSelectSender(ctx: any) {
+async function handleSendSplSelectSender(ctx: any) {
   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   const userId = ctx.from?.id;
   const walletIndex = parseInt(ctx.match[1]);
@@ -97,10 +103,14 @@ export async function handleSendSplSelectSender(ctx: any) {
   }
 
   const selectedWallet = wallets[walletIndex];
-  const userState = userStates.get(userId) || { step: 'select_sender' };
-  userState.senderWallet = selectedWallet;
+  
+  const userState = sendSplStateManager.getState(userId) || { step: 'select_sender' as const, data: {} };
+  if (!userState.data) {
+    userState.data = {};
+  }
+  (userState.data as any).senderWallet = selectedWallet;
   userState.step = 'enter_token';
-  userStates.set(userId, userState);
+  sendSplStateManager.updateState(userId, userState);
 
   await ctx.editMessageText(t('send.enter_token_mint'), {
     parse_mode: 'HTML',
@@ -111,7 +121,7 @@ export async function handleSendSplSelectSender(ctx: any) {
 
   // Set up text message handler for token mint
   ctx.session = ctx.session || {};
-  ctx.session.waitingForSplTokenMint = true;
+  ctx.session.waitingForSplToken = true;
 }
 
 /**
@@ -127,7 +137,7 @@ export async function handleTokenMintInput(ctx: any) {
     return;
   }
 
-  // Validate Solana address
+  // Validate token mint address
   try {
     new PublicKey(tokenMint);
   } catch (error) {
@@ -135,23 +145,27 @@ export async function handleTokenMintInput(ctx: any) {
     return;
   }
 
-  const userState = userStates.get(userId);
+  const userState = sendSplStateManager.getState(userId);
   if (!userState || userState.step !== 'enter_token') {
     await ctx.reply(t('common.error_try_again'));
     return;
   }
 
-  userState.tokenMint = tokenMint;
+  if (!userState.data) {
+    userState.data = {};
+  }
+  (userState.data as any).tokenMint = tokenMint;
   userState.step = 'enter_recipient';
-  userStates.set(userId, userState);
+  sendSplStateManager.updateState(userId, userState);
 
   await ctx.reply(t('send.enter_recipient'), {
+    parse_mode: 'HTML',
     reply_markup: Markup.inlineKeyboard([
       [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
     ]).reply_markup,
   });
 
-  ctx.session.waitingForSplTokenMint = false;
+  ctx.session.waitingForSplToken = false;
   ctx.session.waitingForSplRecipient = true;
 }
 
@@ -176,15 +190,18 @@ export async function handleSplRecipientInput(ctx: any) {
     return;
   }
 
-  const userState = userStates.get(userId);
+  const userState = sendSplStateManager.getState(userId);
   if (!userState || userState.step !== 'enter_recipient') {
     await ctx.reply(t('common.error_try_again'));
     return;
   }
 
-  userState.recipientAddress = recipientAddress;
+  if (!userState.data) {
+    userState.data = {};
+  }
+  (userState.data as any).recipientAddress = recipientAddress;
   userState.step = 'enter_amount';
-  userStates.set(userId, userState);
+  sendSplStateManager.updateState(userId, userState);
 
   await ctx.reply(t('send.enter_spl_amount'), {
     reply_markup: Markup.inlineKeyboard([
@@ -215,35 +232,38 @@ export async function handleSplAmountInput(ctx: any) {
     return;
   }
 
-  const userState = userStates.get(userId);
+  const userState = sendSplStateManager.getState(userId);
   if (!userState || userState.step !== 'enter_amount') {
     await ctx.reply(t('common.error_try_again'));
     return;
   }
 
-  userState.amount = amount;
+  if (!userState.data) {
+    userState.data = {};
+  }
+  (userState.data as any).amount = amount;
   userState.step = 'confirm';
-  userStates.set(userId, userState);
+  sendSplStateManager.updateState(userId, userState);
 
   const confirmText = `${t('send.confirm_spl_title')}\n\n` +
-    `${t('send.sender_wallet')}\n<code>${userState.senderWallet!.address}</code>\n\n` +
-    `${t('send.recipient_address')}\n<code>${userState.recipientAddress}</code>\n\n` +
-    `${t('send.token_address')}\n<code>${userState.tokenMint}</code>\n\n` +
-    `${t('send.transfer_quantity')} ${amount}\n\n` +
+    `${t('send.sender_wallet')}\n<code>${userState.data.senderWallet!.address}</code>\n\n` +
+    `${t('send.token_mint')}\n<code>${userState.data.tokenMint}</code>\n\n` +
+    `${t('send.recipient_address')}\n<code>${userState.data.recipientAddress}</code>\n\n` +
+    `${t('send.transfer_amount')} ${amount}\n\n` +
     `${t('send.confirm_info')}`;
 
   await ctx.reply(confirmText, {
     parse_mode: 'HTML',
     reply_markup: Markup.inlineKeyboard([
+      // [
+      //   Markup.button.callback(t('buttons.copy_sender'), `copy_spl_sender_${userState.data.senderWallet!.address}`),
+      //   Markup.button.callback(t('buttons.copy_recipient'), `copy_spl_recipient_${userState.data.recipientAddress}`)
+      // ],
       [
-        Markup.button.callback(t('buttons.copy_sender'), `copy_sender_${userState.senderWallet!.address}`),
-        Markup.button.callback(t('buttons.copy_recipient'), `copy_recipient_${userState.recipientAddress}`)
+        Markup.button.callback(t('buttons.copy_token'), `copy_spl_token_${userState.data.tokenMint}`)
       ],
       [
-        Markup.button.callback(t('buttons.copy_token'), `copy_token_${userState.tokenMint}`),
-        Markup.button.callback(t('buttons.confirm_transfer'), 'send_spl_confirm')
-      ],
-      [
+        Markup.button.callback(t('buttons.confirm_transfer'), 'send_spl_confirm'),
         Markup.button.callback(t('buttons.cancel'), 'menu_main')
       ]
     ]).reply_markup,
@@ -255,7 +275,7 @@ export async function handleSplAmountInput(ctx: any) {
 /**
  * Handle transaction confirmation and execution
  */
-export async function handleSendSplConfirm(ctx: any) {
+async function handleSendSplConfirm(ctx: any) {
   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   const userId = ctx.from?.id;
 
@@ -264,8 +284,8 @@ export async function handleSendSplConfirm(ctx: any) {
     return;
   }
 
-  const userState = userStates.get(userId);
-  if (!userState || userState.step !== 'confirm' || !userState.senderWallet || !userState.recipientAddress || !userState.amount || !userState.tokenMint) {
+  const userState = sendSplStateManager.getState(userId);
+  if (!userState || userState.step !== 'confirm' || !userState.data?.senderWallet || !userState.data?.tokenMint || !userState.data?.recipientAddress || !userState.data?.amount) {
     await ctx.reply(t('common.error_try_again'));
     return;
   }
@@ -278,53 +298,68 @@ export async function handleSendSplConfirm(ctx: any) {
     
     // Create keypair from private key
     const senderKeypair = Keypair.fromSecretKey(
-      bs58.decode(userState.senderWallet.private_key)
+      bs58.decode(userState.data.senderWallet.private_key)
     );
     
-    const recipientPubkey = new PublicKey(userState.recipientAddress);
-    const tokenMintPubkey = new PublicKey(userState.tokenMint);
+    const tokenMintPubkey = new PublicKey(userState.data.tokenMint);
+    const recipientPubkey = new PublicKey(userState.data.recipientAddress);
 
-    // Get token mint info to get decimals
+    // Get token mint info to determine decimals
     const mintInfo = await getMint(connection, tokenMintPubkey);
     const decimals = mintInfo.decimals;
+    const transferAmount = Math.floor(userState.data.amount * Math.pow(10, decimals));
 
-    // Get token accounts
+    // Get sender's token account
     const senderTokenAccount = await getAssociatedTokenAddress(
       tokenMintPubkey,
       senderKeypair.publicKey
     );
 
+    // Check if sender has the token account and sufficient balance
+    try {
+      const senderTokenAccountInfo = await getAccount(connection, senderTokenAccount);
+      if (Number(senderTokenAccountInfo.amount) < transferAmount) {
+        await ctx.editMessageText(
+          t('send.insufficient_token_balance', {
+            senderAddress: userState.data.senderWallet.address,
+            tokenMint: userState.data.tokenMint,
+            currentBalance: (Number(senderTokenAccountInfo.amount) / Math.pow(10, decimals)).toFixed(decimals),
+            amount: userState.data.amount
+          }),
+          { parse_mode: 'HTML' }
+        );
+        sendSplStateManager.clearState(userId);
+        return;
+      }
+    } catch (error) {
+      await ctx.editMessageText(
+        t('send.no_token_account', {
+          senderAddress: userState.data.senderWallet.address,
+          tokenMint: userState.data.tokenMint
+        }),
+        { parse_mode: 'HTML' }
+      );
+      sendSplStateManager.clearState(userId);
+      return;
+    }
+
+    // Get recipient's token account
     const recipientTokenAccount = await getAssociatedTokenAddress(
       tokenMintPubkey,
       recipientPubkey
     );
 
-    // Check sender token balance
-    try {
-      const senderAccount = await getAccount(connection, senderTokenAccount);
-      const tokenAmount = userState.amount * Math.pow(10, decimals); // Use correct decimals
-      
-      if (Number(senderAccount.amount) < tokenAmount) {
-        await ctx.editMessageText(t('send.insufficient_token_balance'), { parse_mode: 'HTML' });
-        userStates.delete(userId);
-        return;
-      }
-    } catch (error) {
-      await ctx.editMessageText(t('send.no_token_account'), { parse_mode: 'HTML' });
-      userStates.delete(userId);
-      return;
-    }
-
-    // Check if recipient token account exists, create if not
     const instructions = [];
+
+    // Check if recipient token account exists, if not, create it
     try {
       await getAccount(connection, recipientTokenAccount);
     } catch (error) {
-      // Recipient token account doesn't exist, create it
+      // Token account doesn't exist, create it
       const createAccountInstruction = createAssociatedTokenAccountInstruction(
         senderKeypair.publicKey, // payer
         recipientTokenAccount,
-        recipientPubkey,
+        recipientPubkey, // owner
         tokenMintPubkey
       );
       instructions.push(createAccountInstruction);
@@ -335,7 +370,7 @@ export async function handleSendSplConfirm(ctx: any) {
       senderTokenAccount,
       recipientTokenAccount,
       senderKeypair.publicKey,
-      userState.amount * Math.pow(10, decimals), // Use correct decimals
+      transferAmount,
       [],
       TOKEN_PROGRAM_ID
     );
@@ -349,18 +384,18 @@ export async function handleSendSplConfirm(ctx: any) {
     );
 
     const signature = await sendTransaction(connection, transaction, [senderKeypair]);
-
+    
     const explorerUrl = `https://explorer.solana.com/tx/${signature}${RPC.includes("devnet") ? "?cluster=devnet" : ""}`;
 
-    // Generate short ID for transaction signature to avoid Telegram button data length limit
-    const shortId = `tx_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    // Generate short ID for button callback
+    const shortId = `spl_tx_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     transactionSignatures.set(shortId, signature);
 
     const successText = `${t('send.spl_success_title')}\n\n` +
-      `${t('send.sender_wallet')}\n<code>${userState.senderWallet!.address}</code>\n\n` +
-      `${t('send.recipient_address')}\n<code>${userState.recipientAddress}</code>\n\n` +
-      `${t('send.token_address')}\n<code>${userState.tokenMint}</code>\n\n` +
-      `${t('send.transfer_quantity')} ${userState.amount}\n\n` +
+      `${t('send.sender_wallet')}\n<code>${userState.data.senderWallet!.address}</code>\n\n` +
+      `${t('send.token_mint')}\n<code>${userState.data.tokenMint}</code>\n\n` +
+      `${t('send.recipient_address')}\n<code>${userState.data.recipientAddress}</code>\n\n` +
+      `${t('send.transfer_amount')} ${userState.data.amount}\n\n` +
       `${t('send.transaction_hash')}\n<code>${signature}</code>\n\n` +
       `${t('send.transaction_submitted')}`;
 
@@ -368,66 +403,72 @@ export async function handleSendSplConfirm(ctx: any) {
       parse_mode: 'HTML',
       reply_markup: Markup.inlineKeyboard([
         [
-          Markup.button.callback(t('buttons.copy_tx'), `copy_tx_${shortId}`),
+          // Markup.button.callback(t('buttons.copy_tx'), `copy_spl_tx_${shortId}`),
           Markup.button.url(t('buttons.view_transaction'), explorerUrl)
         ],
         [Markup.button.callback(t('buttons.back_to_main_home'), 'menu_main')]
       ]).reply_markup,
     });
 
+    // Clean up user state
+    sendSplStateManager.clearState(userId);
   } catch (error) {
-    console.error('Error sending SPL token:', error);
-    await ctx.editMessageText(t('send.spl_transfer_error'), {
+    let errorMessage = '';
+    
+    if (error.message && error.message.includes('insufficient funds')) {
+      errorMessage = t('errors.insufficient_funds_spl');
+    } else if (error.message && error.message.includes('blockhash')) {
+      errorMessage = t('send.error_blockhash', { error: error.message });
+    } else if (error.message && error.message.includes('Transaction simulation failed')) {
+      errorMessage = t('send.error_simulation_failed', { error: error.message });
+    } else {
+      errorMessage = t('send.error_general', { error: error.message || 'Unknown error' });
+    }
+    
+    await ctx.editMessageText(errorMessage, {
       parse_mode: 'HTML',
       reply_markup: Markup.inlineKeyboard([
         [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
       ]).reply_markup,
     });
-  }
 
-  // Clean up user state
-  userStates.delete(userId);
+    // Clean up user state
+    sendSplStateManager.clearState(userId);
+  }
 }
 
 /**
- * Handle copy actions for SPL
+ * Handle copy actions for SPL transfers
  */
-export async function handleSplCopyAction(ctx: any) {
-  const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
-  const data = ctx.callbackQuery?.data;
-  
-  if (!data) return;
+// async function handleSplCopyAction(ctx: any) {
+//   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+//   const callbackData = ctx.callbackQuery?.data;
 
-  let copyText = '';
-  let message = '';
+//   if (!callbackData) return;
 
-  if (data.startsWith('copy_sender_')) {
-    copyText = data.replace('copy_sender_', '');
-    message = t('send.copy_sender_feedback', { address: copyText });
-  } else if (data.startsWith('copy_recipient_')) {
-    copyText = data.replace('copy_recipient_', '');
-    message = t('send.copy_recipient_feedback', { address: copyText });
-  } else if (data.startsWith('copy_token_')) {
-    copyText = data.replace('copy_token_', '');
-    message = t('send.copy_token_feedback', { address: copyText });
-  } else if (data.startsWith('copy_tx_')) {
-    const shortId = data.replace('copy_tx_', '');
-    const fullSignature = transactionSignatures.get(shortId);
-    
-    if (fullSignature) {
-      copyText = fullSignature;
-      message = t('send.copy_tx_feedback', { txHash: copyText });
-      // Clean up the temporary storage after use
-      transactionSignatures.delete(shortId);
-    } else {
-      message = t('send.copy_tx_expired');
-    }
-  }
+//   let textToCopy = '';
+//   let messageKey = '';
 
-  if (message) {
-    await ctx.answerCbQuery(message, { show_alert: true });
-  }
-}
+//   if (callbackData.startsWith('copy_spl_sender_')) {
+//     textToCopy = callbackData.replace('copy_spl_sender_', '');
+//     messageKey = 'send.copied_sender';
+//   } else if (callbackData.startsWith('copy_spl_recipient_')) {
+//     textToCopy = callbackData.replace('copy_spl_recipient_', '');
+//     messageKey = 'send.copied_recipient';
+//   } else if (callbackData.startsWith('copy_spl_token_')) {
+//     textToCopy = callbackData.replace('copy_spl_token_', '');
+//     messageKey = 'send.copied_token';
+//   } else if (callbackData.startsWith('copy_spl_tx_')) {
+//     const shortId = callbackData.replace('copy_spl_tx_', '');
+//     textToCopy = transactionSignatures.get(shortId) || '';
+//     messageKey = 'send.copied_tx';
+//   }
+
+//   if (textToCopy) {
+//     await ctx.answerCbQuery(t(messageKey));
+//     await ctx.reply(`<code>${textToCopy}</code>`, { parse_mode: 'HTML' });
+//   }
+// }
 
 /**
  * Register send SPL actions
@@ -436,5 +477,5 @@ export function registerSendSplActions(bot: any) {
   bot.action('menu_send_spl', handleSendSpl);
   bot.action(/^send_spl_select_(\d+)$/, handleSendSplSelectSender);
   bot.action('send_spl_confirm', handleSendSplConfirm);
-  bot.action(/^copy_(sender|recipient|token|tx)_/, handleSplCopyAction);
+  // bot.action(/^copy_spl_(sender|recipient|token|tx)_/, handleSplCopyAction);
 }

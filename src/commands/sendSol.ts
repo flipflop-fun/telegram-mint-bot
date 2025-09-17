@@ -4,14 +4,20 @@ import { getUserWallets } from '../services/db';
 import { createTransaction, sendTransaction } from '../utils/solana/transaction';
 import { RPC } from '../../config';
 import bs58 from 'bs58';
+import { UserStateManager, UserState } from '../utils/stateManager';
 
-// Store user states for the send SOL flow
-const userStates = new Map<number, {
+// Define send SOL state interface
+interface SendSolState extends UserState {
   step: 'select_sender' | 'enter_recipient' | 'enter_amount' | 'confirm';
-  senderWallet?: { address: string; private_key: string };
-  recipientAddress?: string;
-  amount?: number;
-}>();
+  data: {
+    senderWallet?: { address: string; private_key: string; };
+    recipientAddress?: string;
+    amount?: number;
+  };
+}
+
+// Create send SOL state manager instance
+const sendSolStateManager = new UserStateManager<SendSolState>();
 
 const transactionSignatures = new Map<string, string>();
 
@@ -28,7 +34,7 @@ export async function handleSendSol(ctx: any) {
   }
 
   // Reset user state
-  userStates.set(userId, { step: 'select_sender' });
+  sendSolStateManager.setState(userId, { step: 'select_sender', data: {} });
 
   const menuText = t('send.sol_title');
   
@@ -94,12 +100,14 @@ export async function handleSendSolSelectSender(ctx: any) {
   }
 
   const selectedWallet = wallets[walletIndex];
-  // console.log(`用户 ${userId} 选择了钱包 ${walletIndex}: ${selectedWallet.address}`);
   
-  const userState = userStates.get(userId) || { step: 'select_sender' };
-  userState.senderWallet = selectedWallet;
+  const userState = sendSolStateManager.getState(userId) || { step: 'select_sender' as const, data: {} };
+  if (!userState.data) {
+    userState.data = {};
+  }
+  (userState.data as any).senderWallet = selectedWallet;
   userState.step = 'enter_recipient';
-  userStates.set(userId, userState);
+  sendSolStateManager.updateState(userId, userState);
 
   await ctx.editMessageText(t('send.enter_recipient'), {
     parse_mode: 'HTML',
@@ -111,11 +119,6 @@ export async function handleSendSolSelectSender(ctx: any) {
   // Set up text message handler for recipient address
   ctx.session = ctx.session || {};
   ctx.session.waitingForSolRecipient = true;
-  // console.log(`=== handleSendSolSelectSender调试 ===`);
-  // console.log(`用户 ${userId} 选择钱包后设置session状态:`);
-  // console.log(`waitingForSolRecipient: ${ctx.session.waitingForSolRecipient}`);
-  // console.log(`完整session:`, ctx.session);
-  // console.log(`=====================================`);
 }
 
 /**
@@ -139,15 +142,18 @@ export async function handleRecipientInput(ctx: any) {
     return;
   }
 
-  const userState = userStates.get(userId);
+  const userState = sendSolStateManager.getState(userId);
   if (!userState || userState.step !== 'enter_recipient') {
     await ctx.reply(t('common.error_try_again'));
     return;
   }
 
-  userState.recipientAddress = recipientAddress;
+  if (!userState.data) {
+    userState.data = {};
+  }
+  userState.data.recipientAddress = recipientAddress;
   userState.step = 'enter_amount';
-  userStates.set(userId, userState);
+  sendSolStateManager.updateState(userId, userState);
 
   await ctx.reply(t('send.enter_sol_amount'), {
     reply_markup: Markup.inlineKeyboard([
@@ -178,29 +184,32 @@ export async function handleAmountInput(ctx: any) {
     return;
   }
 
-  const userState = userStates.get(userId);
+  const userState = sendSolStateManager.getState(userId);
   if (!userState || userState.step !== 'enter_amount') {
     await ctx.reply(t('common.error_try_again'));
     return;
   }
 
-  userState.amount = amount;
+  if (!userState.data) {
+    userState.data = {};
+  }
+  userState.data.amount = amount;
   userState.step = 'confirm';
-  userStates.set(userId, userState);
+  sendSolStateManager.updateState(userId, userState);
 
   const confirmText = `${t('send.confirm_sol_title')}\n\n` +
-    `${t('send.sender_wallet')}\n<code>${userState.senderWallet!.address}</code>\n\n` +
-    `${t('send.recipient_address')}\n<code>${userState.recipientAddress}</code>\n\n` +
+    `${t('send.sender_wallet')}\n<code>${userState.data.senderWallet!.address}</code>\n\n` +
+    `${t('send.recipient_address')}\n<code>${userState.data.recipientAddress}</code>\n\n` +
     `${t('send.transfer_amount')} ${amount} SOL\n\n` +
     `${t('send.confirm_info')}`;
 
   await ctx.reply(confirmText, {
     parse_mode: 'HTML',
     reply_markup: Markup.inlineKeyboard([
-      [
-        Markup.button.callback(t('buttons.copy_sender'), `copy_sender_${userState.senderWallet!.address}`),
-        Markup.button.callback(t('buttons.copy_recipient'), `copy_recipient_${userState.recipientAddress}`)
-      ],
+      // [
+      //   Markup.button.callback(t('buttons.copy_sender'), `copy_sender_${userState.data.senderWallet.address}`),
+      //   Markup.button.callback(t('buttons.copy_recipient'), `copy_recipient_${userState.data.recipientAddress}`)
+      // ],
       [
         Markup.button.callback(t('buttons.confirm_transfer'), 'send_sol_confirm'),
         Markup.button.callback(t('buttons.cancel'), 'menu_main')
@@ -223,8 +232,8 @@ export async function handleSendSolConfirm(ctx: any) {
     return;
   }
 
-  const userState = userStates.get(userId);
-  if (!userState || userState.step !== 'confirm' || !userState.senderWallet || !userState.recipientAddress || !userState.amount) {
+  const userState = sendSolStateManager.getState(userId);
+  if (!userState || userState.step !== 'confirm' || !userState.data?.senderWallet || !userState.data?.recipientAddress || !userState.data?.amount) {
     await ctx.reply(t('common.error_try_again'));
     return;
   }
@@ -237,11 +246,11 @@ export async function handleSendSolConfirm(ctx: any) {
     
     // Create keypair from private key
     const senderKeypair = Keypair.fromSecretKey(
-      bs58.decode(userState.senderWallet.private_key)
+      bs58.decode(userState.data.senderWallet.private_key)
     );
     
-    const recipientPubkey = new PublicKey(userState.recipientAddress);
-    const lamports = userState.amount * LAMPORTS_PER_SOL;
+    const recipientPubkey = new PublicKey(userState.data.recipientAddress);
+    const lamports = userState.data.amount * LAMPORTS_PER_SOL;
 
     // Check sender balance
     const balance = await connection.getBalance(senderKeypair.publicKey);
@@ -263,31 +272,21 @@ export async function handleSendSolConfirm(ctx: any) {
     const feeResponse = await connection.getFeeForMessage(testTransaction.message);
     const estimatedFee = feeResponse.value || 10000; // Fallback to 10000 lamports if estimation fails
     
-    // console.log(`=== 发送SOL调试信息 ===`);
-    // console.log(`选择的发送钱包地址: ${userState.senderWallet.address}`);
-    // console.log(`钱包公钥: ${senderKeypair.publicKey.toBase58()}`);
-    // console.log(`钱包余额: ${balance / LAMPORTS_PER_SOL} SOL (${balance} lamports)`);
-    // console.log(`要发送金额: ${userState.amount} SOL (${lamports} lamports)`);
-    // console.log(`接收地址: ${userState.recipientAddress}`);
-    // console.log(`预估手续费: ${estimatedFee / LAMPORTS_PER_SOL} SOL (${estimatedFee} lamports)`);
-    // console.log(`总需要: ${(lamports + estimatedFee) / LAMPORTS_PER_SOL} SOL (${lamports + estimatedFee} lamports)`);
-    // console.log(`==================`);
-    
     if (balance < lamports + estimatedFee) {
       const balanceInSol = balance / LAMPORTS_PER_SOL;
       const requiredInSol = (lamports + estimatedFee) / LAMPORTS_PER_SOL;
       await ctx.editMessageText(
         t('send.insufficient_balance_details', {
-          senderAddress: userState.senderWallet.address,
+          senderAddress: userState.data.senderWallet.address,
           currentBalance: balanceInSol.toFixed(6),
-          recipientAddress: userState.recipientAddress,
-          amount: userState.amount,
+          recipientAddress: userState.data.recipientAddress,
+          amount: userState.data.amount,
           fee: (estimatedFee / LAMPORTS_PER_SOL).toFixed(6),
           totalRequired: requiredInSol.toFixed(6)
         }),
         { parse_mode: 'HTML' }
       );
-      userStates.delete(userId);
+      sendSolStateManager.clearState(userId);
       return;
     }
 
@@ -314,9 +313,9 @@ export async function handleSendSolConfirm(ctx: any) {
     transactionSignatures.set(shortId, signature);
 
     const successText = `${t('send.sol_success_title')}\n\n` +
-      `${t('send.sender_wallet')}\n<code>${userState.senderWallet!.address}</code>\n\n` +
-      `${t('send.recipient_address')}\n<code>${userState.recipientAddress}</code>\n\n` +
-      `${t('send.transfer_amount')} ${userState.amount} SOL\n\n` +
+      `${t('send.sender_wallet')}\n<code>${userState.data.senderWallet!.address}</code>\n\n` +
+      `${t('send.recipient_address')}\n<code>${userState.data.recipientAddress}</code>\n\n` +
+      `${t('send.transfer_amount')} ${userState.data.amount} SOL\n\n` +
       `${t('send.transaction_hash')}\n<code>${signature}</code>\n\n` +
       `${t('send.transaction_submitted')}`;
 
@@ -325,22 +324,15 @@ export async function handleSendSolConfirm(ctx: any) {
       parse_mode: 'HTML',
       reply_markup: Markup.inlineKeyboard([
         [
-          Markup.button.callback(t('buttons.copy_tx'), `copy_tx_${shortId}`),
+          // Markup.button.callback(t('buttons.copy_tx'), `copy_tx_${shortId}`),
           Markup.button.url(t('buttons.view_transaction'), explorerUrl)
         ],
         [Markup.button.callback(t('buttons.back_to_main_home'), 'menu_main')]
       ]).reply_markup,
     });
     // 清理用户状态
-    userStates.delete(userId);
+    sendSolStateManager.clearState(userId);
   } catch (error) {
-    // console.error('=== SOL转账错误详情 ===');
-    // console.error('错误类型:', error.constructor.name);
-    // console.error('错误消息:', error.message);
-    // console.error('完整错误:', error);
-    // console.error('用户状态:', userState);
-    // console.error('========================');
-    
     let errorMessage = '';
     
     // 根据错误类型提供更准确的错误消息
@@ -363,45 +355,45 @@ export async function handleSendSolConfirm(ctx: any) {
   }
 
   // Clean up user state
-  userStates.delete(userId);
+  sendSolStateManager.clearState(userId);
 }
 
 /**
  * Handle copy actions
  */
-export async function handleCopyAction(ctx: any) {
-  const data = ctx.callbackQuery?.data;
+// async function handleCopyAction(ctx: any) {
+//   const data = ctx.callbackQuery?.data;
   
-  if (!data) return;
+//   if (!data) return;
 
-  let copyText = '';
-  let message = '';
+//   let copyText = '';
+//   let message = '';
 
-  const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
+//   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
 
-  if (data.startsWith('copy_sender_')) {
-    copyText = data.replace('copy_sender_', '');
-    message = `${t('copy.sender_copied')}\n<code>${copyText}</code>`;
-  } else if (data.startsWith('copy_recipient_')) {
-    copyText = data.replace('copy_recipient_', '');
-    message = `${t('copy.recipient_copied')}\n<code>${copyText}</code>`;
-  } else if (data.startsWith('copy_tx_')) {
-    const shortId = data.replace('copy_tx_', '');
-    const fullSignature = transactionSignatures.get(shortId);
-    if (fullSignature) {
-      copyText = fullSignature;
-      message = `${t('copy.tx_copied')}\n<code>${copyText}</code>`;
-      // 清理临时存储
-      transactionSignatures.delete(shortId);
-    } else {
-      message = t('send.error_signature_expired');
-    }
-  }
+//   if (data.startsWith('copy_sender_')) {
+//     copyText = data.replace('copy_sender_', '');
+//     message = `${t('copy.sender_copied')}\n<code>${copyText}</code>`;
+//   } else if (data.startsWith('copy_recipient_')) {
+//     copyText = data.replace('copy_recipient_', '');
+//     message = `${t('copy.recipient_copied')}\n<code>${copyText}</code>`;
+//   } else if (data.startsWith('copy_tx_')) {
+//     const shortId = data.replace('copy_tx_', '');
+//     const fullSignature = transactionSignatures.get(shortId);
+//     if (fullSignature) {
+//       copyText = fullSignature;
+//       message = `${t('copy.tx_copied')}\n<code>${copyText}</code>`;
+//       // 清理临时存储
+//       transactionSignatures.delete(shortId);
+//     } else {
+//       message = t('send.error_signature_expired');
+//     }
+//   }
 
-  if (message) {
-    await ctx.answerCbQuery(message, { show_alert: true });
-  }
-}
+//   if (message) {
+//     await ctx.answerCbQuery(message, { show_alert: true });
+//   }
+// }
 
 /**
  * Register send SOL actions
@@ -410,5 +402,5 @@ export function registerSendSolActions(bot: any) {
   bot.action('menu_send_sol', handleSendSol);
   bot.action(/^send_sol_select_(\d+)$/, handleSendSolSelectSender);
   bot.action('send_sol_confirm', handleSendSolConfirm);
-  bot.action(/^copy_(sender|recipient|tx)_/, handleCopyAction);
+  // bot.action(/^copy_(sender|recipient|tx)_/, handleCopyAction);
 }
