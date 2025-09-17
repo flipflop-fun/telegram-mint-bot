@@ -120,6 +120,7 @@ export async function handleMintDataAddressInput(ctx: any) {
       `${t('mint_data.mint_address')}\n<code>${mintAddress}</code>\n\n` +
       `${t('mint_data.token_name')} ${mintInfo.name || t('mint_data.no_name')}\n\n` +
       `${t('mint_data.token_symbol')} ${mintInfo.symbol || t('mint_data.no_symbol')}\n\n` +
+      `${t('mint_data.flipflop_url', { url: `https://${RPC.includes('devnet') ? 'test' : 'app'}.flipflop.plus/token/${mintAddress}` })}\n\n` +
       `${t('mint_data.current_supply')} ${mintInfo.currentSupply?.toLocaleString() || 'N/A'}\n\n` +
       `${t('mint_data.max_supply')} ${mintInfo.maxSupply ? mintInfo.maxSupply.toLocaleString() : t('mint_data.unlimited')}\n\n` +
       // `${t('mint_data.total_supply')} ${(mintInfo as any).supply?.toLocaleString() || 'N/A'}\n\n` +

@@ -186,6 +186,7 @@
   "mint_data.supply": "💰 <b>Total Supply:</b>",
   "mint_data.token_name": "📛 <b>Token Name:</b>",
   "mint_data.token_symbol": "🏷️ <b>Token Symbol:</b>",
+  "mint_data.flipflop_url": "🔗 <b>FlipFlop:</b> {url}",
   "mint_data.current_supply": "💰 <b>Current Supply:</b>",
   "mint_data.max_supply": "🔝 <b>Max Supply:</b>",
   "mint_data.total_supply": "📊 <b>Total Supply:</b>",

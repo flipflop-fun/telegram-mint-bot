@@ -188,6 +188,7 @@
   "mint_data.holder_percentage": "📊 <b>Процент:</b> {percentage}%",
   "mint_data.market_title": "📈 <b>Рыночная информация</b>",
   "mint_data.market_cap": "💎 <b>Рыночная капитализация:</b> {marketCap}",
+  "mint_data.flipflop_url": "🔗 <b>FlipFlop:</b> {url}",
   "mint_data.price": "💵 <b>Цена:</b> {price}",
   "mint_data.volume_24h": "📊 <b>Объем 24ч:</b> {volume}",
   "mint_data.price_change_24h": "📈 <b>Изменение цены 24ч:</b> {change}%",

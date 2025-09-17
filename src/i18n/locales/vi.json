@@ -188,6 +188,7 @@
   "mint_data.holder_percentage": "📊 <b>Phần Trăm:</b> {percentage}%",
   "mint_data.market_title": "📈 <b>Thông Tin Thị Trường</b>",
   "mint_data.market_cap": "💎 <b>Vốn Hóa Thị Trường:</b> {marketCap}",
+  "mint_data.flipflop_url": "🔗 <b>FlipFlop:</b> {url}",
   "mint_data.price": "💵 <b>Giá:</b> {price}",
   "mint_data.volume_24h": "📊 <b>Khối Lượng 24h:</b> {volume}",
   "mint_data.price_change_24h": "📈 <b>Thay Đổi Giá 24h:</b> {change}%",

@@ -188,6 +188,7 @@
   "mint_data.current_supply": "💰 <b>當前供應量：</b>",
   "mint_data.max_supply": "🔝 <b>最大供應量：</b>",
   "mint_data.total_supply": "📊 <b>總供應量：</b>",
+  "mint_data.flipflop_url": "🔗 <b>FlipFlop:</b> {url}",
   "mint_data.admin": "👑 <b>管理員：</b>",
   "mint_data.config_account": "⚙️ <b>配置帳戶：</b>",
   "mint_data.current_era": "🕐 <b>當前紀元：</b>",

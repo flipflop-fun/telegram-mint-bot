@@ -187,6 +187,7 @@
   "mint_data.token_symbol": "🏷️ <b>代币符号：</b>",
   "mint_data.current_supply": "💰 <b>当前供应量：</b>",
   "mint_data.max_supply": "🔝 <b>最大供应量：</b>",
+  "mint_data.flipflop_url": "🔗 <b>FlipFlop:</b> {url}",
   "mint_data.total_supply": "📊 <b>总供应量：</b>",
   "mint_data.admin": "👑 <b>管理员：</b>",
   "mint_data.config_account": "⚙️ <b>配置账户：</b>",

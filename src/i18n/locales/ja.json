@@ -188,6 +188,7 @@
   "mint_data.holder_percentage": "📊 <b>割合：</b> {percentage}%",
   "mint_data.market_title": "📈 <b>市場情報</b>",
   "mint_data.market_cap": "💎 <b>時価総額：</b> {marketCap}",
+  "mint_data.flipflop_url": "🔗 <b>FlipFlop:</b> {url}",
   "mint_data.price": "💵 <b>価格：</b> {price}",
   "mint_data.volume_24h": "📊 <b>24時間取引量：</b> {volume}",
   "mint_data.price_change_24h": "📈 <b>24時間価格変動：</b> {change}%",
