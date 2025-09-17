@@ -121,7 +121,7 @@ async function handleSendSplSelectSender(ctx: any) {
 
   // Set up text message handler for token mint
   ctx.session = ctx.session || {};
-  ctx.session.waitingForSplToken = true;
+  ctx.session.waitingForSplTokenMint = true;
 }
 
 /**
@@ -165,7 +165,7 @@ export async function handleTokenMintInput(ctx: any) {
     ]).reply_markup,
   });
 
-  ctx.session.waitingForSplToken = false;
+  ctx.session.waitingForSplTokenMint = false;
   ctx.session.waitingForSplRecipient = true;
 }
 

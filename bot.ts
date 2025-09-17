@@ -117,51 +117,28 @@ registerSendSplActions(bot);
 registerRefundActions(bot);
 registerSetUrcActions(bot);
 
-// Unified text handler for all text inputs
+// Handle text messages
 bot.on('text', async (ctx: any) => {
-  // const userId = ctx.from?.id;
-  // const text = ctx.message?.text;
-  // console.log(`=== 文本输入调试 ===`);
-  // console.log(`用户ID: ${userId}`);
-  // console.log(`输入文本: ${text}`);
-  // console.log(`Session状态:`, ctx.session);
-  
-  // Handle mint text inputs (check first as it doesn't use session flags)
-  await handleMintTextInput(ctx);
-  
-  // Handle mint data text inputs
-  if (ctx.session?.waitingForMintDataAddress) {
-    // console.log(`处理代币数据地址输入: ${text}`);
-    await handleMintDataAddressInput(ctx);
-  }
-  // Handle SOL sending text inputs
-  else if (ctx.session?.waitingForSolRecipient) {
-    // console.log(`处理SOL接收方地址输入: ${text}`);
-    await handleRecipientInput(ctx);
-  } else if (ctx.session?.waitingForSolAmount) {
-    // console.log(`处理SOL金额输入: ${text}`);
-    await handleAmountInput(ctx);
-  }
-  // Handle SPL sending text inputs
-  else if (ctx.session?.waitingForSplTokenMint) {
-    // console.log(`处理SPL代币mint地址输入: ${text}`);
+  // Check session state for specific inputs first
+  if (ctx.session?.waitingForSplTokenMint) {
     await handleTokenMintInput(ctx);
   } else if (ctx.session?.waitingForSplRecipient) {
-    // console.log(`处理SPL接收方地址输入: ${text}`);
     await handleSplRecipientInput(ctx);
   } else if (ctx.session?.waitingForSplAmount) {
-    // console.log(`处理SPL金额输入: ${text}`);
     await handleSplAmountInput(ctx);
-  }
-  // Handle refund text inputs
-  else if (ctx.session?.waitingForRefundMintAddress) {
+  } else if (ctx.session?.waitingForSolRecipient) {
+    await handleRecipientInput(ctx);
+  } else if (ctx.session?.waitingForSolAmount) {
+    await handleAmountInput(ctx);
+  } else if (ctx.session?.waitingForMintDataAddress) {
+    await handleMintDataAddressInput(ctx);
+  } else if (ctx.session?.waitingForRefundMintAddress) {
     await handleRefundTextInput(ctx);
-  }
-  // Handle set URC text inputs
-  else if (ctx.session?.waitingForUrcValue) {
+  } else if (ctx.session?.waitingForUrcValue) {
     await handleSetUrcTextInput(ctx);
   } else {
-    // console.log(`没有匹配的文本处理器`);
+    // If no specific session state, try mint text input
+    await handleMintTextInput(ctx);
   }
 });
 

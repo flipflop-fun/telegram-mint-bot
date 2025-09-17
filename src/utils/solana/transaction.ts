@@ -25,7 +25,7 @@ export async function sendTransaction(
   
   try {
     const confirmation = await connection.confirmTransaction(signature, 'confirmed');
-    console.log('Tx confirmation: ', confirmation);
+    // console.log('Tx confirmation: ', confirmation);
     
     if (confirmation.value.err) {
       throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
@@ -37,10 +37,10 @@ export async function sendTransaction(
     
     try {
       const txStatus = await connection.getSignatureStatus(signature);
-      console.log('Checking transaction status:', txStatus);
+      // console.log('Checking transaction status:', txStatus);
       
       if (txStatus.value && txStatus.value.confirmationStatus === 'confirmed' && !txStatus.value.err) {
-        console.log('Transaction actually confirmed, ignoring confirmation error');
+        // console.log('Transaction actually confirmed, ignoring confirmation error');
         return signature;
       }
     } catch (statusError) {

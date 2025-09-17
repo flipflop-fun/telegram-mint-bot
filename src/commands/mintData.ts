@@ -63,7 +63,7 @@ export async function handleMintData(ctx: any) {
 
     // Set up text message handler for mint address
     ctx.session = ctx.session || {};
-    ctx.session.waitingForMintAddress = true;
+    ctx.session.waitingForMintDataAddress = true;
   } catch (error) {
     console.error('Error in handleMintData:', error);
     await ctx.reply(t('common.error_try_again'));
@@ -90,7 +90,7 @@ export async function handleMintDataAddressInput(ctx: any) {
 
   // Clear the waiting flag
   if (ctx.session) {
-    ctx.session.waitingForMintAddress = false;
+    ctx.session.waitingForMintDataAddress = false;
   }
 
   // Validate mint address
@@ -114,7 +114,7 @@ export async function handleMintDataAddressInput(ctx: any) {
   mintDataStateManager.updateState(userId, userState);
 
   // Show loading message
-  const loadingMessage = await ctx.reply(t('mint_data.loading'), {
+  const loadingMessage = await ctx.reply("Loading...", {
     parse_mode: 'HTML'
   });
 
@@ -126,12 +126,18 @@ export async function handleMintDataAddressInput(ctx: any) {
     });
     
     if (!response || !response.success || !response.data) {
-      await ctx.editMessageText(t('mint_data.not_found'), {
-        parse_mode: 'HTML',
-        reply_markup: Markup.inlineKeyboard([
-          [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
-        ]).reply_markup,
-      });
+      await ctx.telegram.editMessageText(
+        loadingMessage.chat.id,
+        loadingMessage.message_id,
+        undefined,
+        t('mint_data.not_found'),
+        {
+          parse_mode: 'HTML',
+          reply_markup: Markup.inlineKeyboard([
+            [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
+          ]).reply_markup,
+        }
+      );
       mintDataStateManager.clearState(userId);
       return;
     }
@@ -140,7 +146,8 @@ export async function handleMintDataAddressInput(ctx: any) {
 
     // Format the mint data for display
     const dataText = `${t('mint_data.data_title')}\n\n` +
-      `${t('mint_data.mint_address')}\n<code>${mintAddress}</code>\n\n` +
+      `${t('mint_data.mint_address')}\n<code>${mintAddress}</code>\n` +
+      `${t('mint_data.flipflop_url', { url: `https://${RPC.includes('devnet') ? 'test' : 'app'}.flipflop.plus/token/${mintAddress}` })}\n\n` +
       `${t('mint_data.token_name')} ${mintData.name || t('mint_data.no_name')}\n` +
       `${t('mint_data.token_symbol')} ${mintData.symbol || t('mint_data.no_symbol')}\n` +
       `${t('mint_data.current_supply')} ${mintData.currentSupply?.toLocaleString() || 'N/A'}\n` +
@@ -154,19 +161,25 @@ export async function handleMintDataAddressInput(ctx: any) {
     // Create buttons for copying important data
     const buttons = [
       [
-        Markup.button.callback(t('buttons.copy_mint_address'), `copy_mint_${mintAddress}`),
+        // Markup.button.callback(t('buttons.copy_mint_address'), `copy_mint_${mintAddress}`),
         Markup.button.url(t('buttons.view_on_explorer'), explorerUrl)
       ],
       [
-        Markup.button.callback(t('buttons.check_another'), 'menu_mint_data'),
+        // Markup.button.callback(t('buttons.check_another'), 'menu_mint_data'),
         Markup.button.callback(t('buttons.back_to_main'), 'menu_main')
       ]
     ];
 
-    await ctx.editMessageText(dataText, {
-      parse_mode: 'HTML',
-      reply_markup: Markup.inlineKeyboard(buttons).reply_markup,
-    });
+    await ctx.telegram.editMessageText(
+      loadingMessage.chat.id,
+      loadingMessage.message_id,
+      undefined,
+      dataText,
+      {
+        parse_mode: 'HTML',
+        reply_markup: Markup.inlineKeyboard(buttons).reply_markup,
+      }
+    );
 
     // Clean up user state
     mintDataStateManager.clearState(userId);
@@ -179,12 +192,18 @@ export async function handleMintDataAddressInput(ctx: any) {
       errorMessage += `\n\n${t('common.error_details')}: ${error.message}`;
     }
 
-    await ctx.editMessageText(errorMessage, {
-      parse_mode: 'HTML',
-      reply_markup: Markup.inlineKeyboard([
-        [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
-      ]).reply_markup,
-    });
+    await ctx.telegram.editMessageText(
+      loadingMessage.chat.id,
+      loadingMessage.message_id,
+      undefined,
+      errorMessage,
+      {
+        parse_mode: 'HTML',
+        reply_markup: Markup.inlineKeyboard([
+          [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
+        ]).reply_markup,
+      }
+    );
 
     // Clean up user state
     mintDataStateManager.clearState(userId);
