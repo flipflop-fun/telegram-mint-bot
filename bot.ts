@@ -8,7 +8,7 @@ import { registerSendSolActions, handleRecipientInput, handleAmountInput } from 
 import { registerSendSplActions, handleTokenMintInput, handleSplRecipientInput, handleSplAmountInput } from './src/commands/sendSpl';
 import { registerMintDataActions, handleMintDataAddressInput } from './src/commands/mintData';
 import { registerRefundActions, handleRefundTextInput } from './src/commands/refund';
-import { registerSetUrcActions, handleSetUrcTextInput } from './src/commands/setUrc';
+import { registerGetUrcActions, handleGetUrcTextInput } from './src/commands/getUrc';
 import { BOT_TOKEN, getInlineKeyboard } from './config';
 import { withI18n, SUPPORTED_LOCALES, LANGUAGE_NAMES, Locale } from './src/i18n/i18n';
 
@@ -115,7 +115,7 @@ registerMintDataActions(bot);
 registerSendSolActions(bot);
 registerSendSplActions(bot);
 registerRefundActions(bot);
-registerSetUrcActions(bot);
+registerGetUrcActions(bot);
 
 // Handle text messages
 bot.on('text', async (ctx: any) => {
@@ -134,8 +134,8 @@ bot.on('text', async (ctx: any) => {
     await handleMintDataAddressInput(ctx);
   } else if (ctx.session?.waitingForRefundMintAddress) {
     await handleRefundTextInput(ctx);
-  } else if (ctx.session?.waitingForUrcValue) {
-    await handleSetUrcTextInput(ctx);
+  } else if (ctx.session?.waitingForGetUrcValue) {
+    await handleGetUrcTextInput(ctx);
   } else {
     // If no specific session state, try mint text input
     await handleMintTextInput(ctx);
