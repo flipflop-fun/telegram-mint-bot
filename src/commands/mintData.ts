@@ -117,16 +117,16 @@ export async function handleMintDataAddressInput(ctx: any) {
     
     // Format the data display with enhanced information from FlipFlop SDK
     const dataText = `${t('mint_data.data_title')}\n\n` +
-      `${t('mint_data.mint_address')}\n<code>${mintAddress}</code>\n\n` +
-      `${t('mint_data.token_name')} ${mintInfo.name || t('mint_data.no_name')}\n\n` +
-      `${t('mint_data.token_symbol')} ${mintInfo.symbol || t('mint_data.no_symbol')}\n\n` +
-      `${t('mint_data.flipflop_url', { url: `https://${RPC.includes('devnet') ? 'test' : 'app'}.flipflop.plus/token/${mintAddress}` })}\n\n` +
-      `${t('mint_data.current_supply')} ${mintInfo.currentSupply?.toLocaleString() || 'N/A'}\n\n` +
-      `${t('mint_data.max_supply')} ${mintInfo.maxSupply ? mintInfo.maxSupply.toLocaleString() : t('mint_data.unlimited')}\n\n` +
+      `${t('mint_data.mint_address')}\n<code>${mintAddress}</code>\n` +
+      `${t('mint_data.token_name')} ${mintInfo.name || t('mint_data.no_name')}\n` +
+      `${t('mint_data.token_symbol')} ${mintInfo.symbol || t('mint_data.no_symbol')}\n` +
+      `${t('mint_data.flipflop_url', { url: `https://${RPC.includes('devnet') ? 'test' : 'app'}.flipflop.plus/token/${mintAddress}` })}\n` +
+      `${t('mint_data.current_supply')} ${mintInfo.currentSupply?.toLocaleString() || 'N/A'}\n` +
+      `${t('mint_data.max_supply')} ${mintInfo.maxSupply ? mintInfo.maxSupply.toLocaleString() : t('mint_data.unlimited')}\n` +
       // `${t('mint_data.total_supply')} ${(mintInfo as any).supply?.toLocaleString() || 'N/A'}\n\n` +
-      `${t('mint_data.admin')} ${mintInfo.admin ? `<code>${mintInfo.admin}</code>` : t('mint_data.no_authority')}\n\n` +
+      `${t('mint_data.admin')} ${mintInfo.admin ? `<code>${mintInfo.admin}</code>` : t('mint_data.no_authority')}\n` +
       // `${t('mint_data.config_account')} <code>${mintInfo.configAccount}</code>\n\n` +
-      `${t('mint_data.current_era')} ${mintInfo.currentEra || 'N/A'}\n\n` +
+      `${t('mint_data.current_era')} ${mintInfo.currentEra || 'N/A'}\n` +
       `${t('mint_data.current_epoch')} ${mintInfo.currentEpoch || 'N/A'}`;
       // `${t('mint_data.fee_rate')} ${mintInfo.feeRate ? (mintInfo.feeRate * 100).toFixed(2) + '%' : 'N/A'}\n\n` +
       // `${t('mint_data.is_mutable')} ${mintInfo.isMutable ? '✅' : '❌'}`;

@@ -20,6 +20,9 @@ export const getInlineKeyboard = (t: any) => [
         { text: t('buttons.send_sol'), callback_data: 'menu_send_sol' },
         { text: t('buttons.send_spl'), callback_data: 'menu_send_spl' },
     ], [
+        { text: t('buttons.refund'), callback_data: 'menu_refund' },
+        { text: t('buttons.set_urc'), callback_data: 'menu_set_urc' },
+    ], [
         { text: t('buttons.language'), callback_data: 'menu_language' },
         { text: t('buttons.help'), callback_data: 'menu_help' },
     ],

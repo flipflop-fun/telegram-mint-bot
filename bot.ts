@@ -7,6 +7,8 @@ import { registerMintActions, handleMintTextInput } from './src/commands/mint';
 import { registerSendSolActions, handleRecipientInput, handleAmountInput } from './src/commands/sendSol';
 import { registerSendSplActions, handleTokenMintInput, handleSplRecipientInput, handleSplAmountInput } from './src/commands/sendSpl';
 import { registerMintDataActions, handleMintDataAddressInput } from './src/commands/mintData';
+import { registerRefundActions, handleRefundTextInput } from './src/commands/refund';
+import { registerSetUrcActions, handleSetUrcTextInput } from './src/commands/setUrc';
 import { BOT_TOKEN, getInlineKeyboard } from './config';
 import { withI18n, SUPPORTED_LOCALES, LANGUAGE_NAMES, Locale } from './src/i18n/i18n';
 
@@ -100,6 +102,8 @@ registerMintActions(bot);
 registerMintDataActions(bot);
 registerSendSolActions(bot);
 registerSendSplActions(bot);
+registerRefundActions(bot);
+registerSetUrcActions(bot);
 
 // Unified text handler for all text inputs
 bot.on('text', async (ctx: any) => {
@@ -136,6 +140,14 @@ bot.on('text', async (ctx: any) => {
   } else if (ctx.session?.waitingForSplAmount) {
     // console.log(`处理SPL金额输入: ${text}`);
     await handleSplAmountInput(ctx);
+  }
+  // Handle refund text inputs
+  else if (ctx.session?.waitingForRefundMintAddress) {
+    await handleRefundTextInput(ctx);
+  }
+  // Handle set URC text inputs
+  else if (ctx.session?.waitingForUrcValue) {
+    await handleSetUrcTextInput(ctx);
   } else {
     // console.log(`没有匹配的文本处理器`);
   }
