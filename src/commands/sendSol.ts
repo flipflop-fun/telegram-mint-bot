@@ -24,7 +24,7 @@ const transactionSignatures = new Map<string, string>();
 /**
  * Handle send SOL menu
  */
-export async function handleSendSol(ctx: any) {
+async function handleSendSol(ctx: any) {
   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   const userId = ctx.from?.id;
 
@@ -83,7 +83,7 @@ export async function handleSendSol(ctx: any) {
 /**
  * Handle sender wallet selection
  */
-export async function handleSendSolSelectSender(ctx: any) {
+async function handleSendSolSelectSender(ctx: any) {
   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   const userId = ctx.from?.id;
   const walletIndex = parseInt(ctx.match[1]);
@@ -223,7 +223,7 @@ export async function handleAmountInput(ctx: any) {
 /**
  * Handle transaction confirmation and execution
  */
-export async function handleSendSolConfirm(ctx: any) {
+async function handleSendSolConfirm(ctx: any) {
   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   const userId = ctx.from?.id;
 

@@ -2,8 +2,8 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import Database from 'better-sqlite3';
 import Bottleneck from 'bottleneck';
 import { RPC, DB_FILE } from '../../config';
-import { getTokenBalance } from '@flipflop-sdk/node';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
+import { getUserWallets } from './db';
 
 // Use the RPC endpoint from config
 const connection = new Connection(RPC, 'confirmed');
@@ -96,7 +96,7 @@ export async function fetchSingleSplTokenBalances(
 export async function viewBalances(userId: number): Promise<
   { address: string; solBalance: number; splTokens: { mint: string; balance: number; decimals: number }[] }[]
 > {
-  const wallets = db.prepare('SELECT address FROM wallets WHERE user_id = ?').all(userId) as { address: string }[];
+  const wallets = getUserWallets(userId).map(wallet => ({ address: wallet.address }));
 
   if (wallets.length === 0) {
     return [];

@@ -1,8 +1,9 @@
 import { Markup } from 'telegraf';
 import { PublicKey } from '@solana/web3.js';
-import { getMintData } from '@flipflop-sdk/node';
+import { getMintData, GetMintDataResponse } from '@flipflop-sdk/node';
 import { RPC } from '../../config';
 import { UserStateManager, UserState } from '../utils/stateManager';
+import { ApiResponse } from '@flipflop-sdk/node/dist/raydium/types';
 
 // Define mint data state interface
 interface MintDataState extends UserState {
@@ -123,7 +124,7 @@ export async function handleMintDataAddressInput(ctx: any) {
     const response = await getMintData({
       rpc: RPC,
       mint: new PublicKey(mintAddress)
-    });
+    }) as ApiResponse<GetMintDataResponse>;
     
     if (!response || !response.success || !response.data) {
       await ctx.telegram.editMessageText(

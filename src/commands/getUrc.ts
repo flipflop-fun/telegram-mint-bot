@@ -1,7 +1,8 @@
 import { Markup } from 'telegraf';
-import { getUrcData } from '@flipflop-sdk/node';
+import { getUrcData, GetUrcDataResponse } from '@flipflop-sdk/node';
 import { RPC } from '../../config';
 import { UserStateManager, UserState } from '../utils/stateManager';
+import { ApiResponse } from '@flipflop-sdk/node/dist/raydium/types';
 
 // Define get URC state interface
 interface GetUrcState extends UserState {
@@ -116,7 +117,7 @@ async function handleUrcValueInput(ctx: any, userId: number, text: string, t: an
       const response = await getUrcData({
         rpc: RPC,
         urc: text
-      });
+      }) as ApiResponse<GetUrcDataResponse>;
       
       if (!response || !response.success || !response.data) {
         await ctx.telegram.editMessageText(

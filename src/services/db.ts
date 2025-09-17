@@ -29,6 +29,23 @@ function getWalletCount(userId: number): number {
   return row.count;
 }
 
+function getWalletByAddress(address: string): { private_key: string } | null {
+  const query = db.prepare('SELECT private_key FROM wallets WHERE address = ?');
+  const row = query.get(address) as { private_key: string } | undefined;
+  return row || null;
+}
+
+function saveWalletsToDatabase(wallets: { publicKey: string; privateKey: string }[], telegramUserId: number): void {
+  const insertStmt = db.prepare('INSERT INTO wallets (address, private_key, user_id) VALUES (?, ?, ?)');
+  const insertMany = db.transaction((ws: { publicKey: string; privateKey: string }[]) => {
+    for (const wallet of ws) {
+      insertStmt.run(wallet.publicKey, wallet.privateKey, telegramUserId);
+    }
+  });
+  insertMany(wallets);
+  console.log(`Saved ${wallets.length} wallets to the database for user ${telegramUserId}.`);
+}
+
 // i18n user settings
 function getUserLanguage(userId: number): string | null {
   const row = db.prepare('SELECT lang FROM user_settings WHERE user_id = ?').get(userId) as { lang: string } | undefined;
@@ -60,4 +77,4 @@ const init = () => {
 };
 init();
 
-export { db, getUserWallets, removeWallet, getWalletCount, getUserLanguage, setUserLanguage };
+export { db, getUserWallets, removeWallet, getWalletCount, getWalletByAddress, saveWalletsToDatabase, getUserLanguage, setUserLanguage };

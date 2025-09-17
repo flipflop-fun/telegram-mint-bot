@@ -19,7 +19,7 @@
   "buttons.add_new_wallet": "➕ 新增钱包",
   "buttons.view_all_tokens": "🔍 查看所有代币",
   "buttons.remove": "🗑️ 删除",
-  "buttons.mint_data": "ℹ️ 铸造数据",
+  "buttons.mint_data": "ℹ️ 代币数据",
   "help.text": "ℹ️ <b>如何使用 SolMate：</b>\n\n1️⃣ 使用\"💳 生成钱包\"创建钱包。\n2️⃣ 使用\"📜 我的钱包\"管理钱包。\n3️⃣ 使用\"🪙 铸造代币\"铸造新的代币。\n4️⃣ 使用\"💰 退款\"处理退款操作。\n\n⚠️ <b>安全提示：</b>\n\n🔒 妥善保管私钥。\n💾 安全保存 .txt 文件。\n🗑️ 从聊天记录中删除 .txt 文件。",
   "generate.select_number": "请选择要生成的钱包数量：",
   "generate.1_wallet": "1 个钱包 💳",

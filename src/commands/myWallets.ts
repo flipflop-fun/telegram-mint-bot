@@ -1,6 +1,6 @@
-import { db, getUserWallets, removeWallet, getWalletCount } from '../services/db';
+import { getUserWallets, removeWallet, getWalletCount, getWalletByAddress, saveWalletsToDatabase } from '../services/db';
 import { Markup } from 'telegraf';
-import { generateWallets, saveWalletsToDatabase } from './generateWallets';
+import { generateWallets } from './generateWallets';
 import { viewBalances, fetchMultipleSolBalances } from '../services/viewBalances';
 import { chunkArray, createPaginationKeyboard } from '../utils/bot/pagination';
 import { handleBackToMainMenu } from '../utils/bot/navigation';
@@ -136,7 +136,7 @@ export async function handleMyWallets(ctx: any, page = 1, isEdit = false) {
     await ctx.deleteMessage(fetchingMessage.message_id);
 }
 
-export async function handleViewAllTokens(ctx: any) {
+async function handleViewAllTokens(ctx: any) {
     const walletAddress = ctx.match[1];
     const userId = ctx.from.id as number;
     const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
@@ -167,7 +167,7 @@ export async function handleViewAllTokens(ctx: any) {
     ctx.session.splTokensMessageId = message.message_id;
 }
 
-export async function handleCloseTokensMessage(ctx: any) {
+async function handleCloseTokensMessage(ctx: any) {
     if (ctx.session?.splTokensMessageId) {
         await ctx.deleteMessage(ctx.session.splTokensMessageId);
         ctx.session.splTokensMessageId = null;
@@ -177,10 +177,7 @@ export async function handleCloseTokensMessage(ctx: any) {
 
 export async function handleViewKey(ctx: any) {
     const walletAddress = ctx.match[1];
-    type WalletRow = { private_key: string };
-    const wallet = db
-        .prepare('SELECT private_key FROM wallets WHERE address = ?')
-        .get(walletAddress) as WalletRow | undefined;
+    const wallet = getWalletByAddress(walletAddress);
 
     const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
 
@@ -195,7 +192,7 @@ export async function handleViewKey(ctx: any) {
     await ctx.reply(message, { parse_mode: 'HTML' });
 }
 
-export async function handleRemoveWallet(ctx: any) {
+async function handleRemoveWallet(ctx: any) {
     const walletAddress = ctx.match[1];
     const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
 
@@ -218,7 +215,7 @@ export async function handleRemoveWallet(ctx: any) {
     await ctx.answerCbQuery();
 }
 
-export async function handleConfirmRemoveWallet(ctx: any) {
+async function handleConfirmRemoveWallet(ctx: any) {
     const walletAddress = ctx.match[1];
     const userId = ctx.from.id as number;
 
@@ -239,7 +236,7 @@ export async function handleConfirmRemoveWallet(ctx: any) {
     }, 1500);
 }
 
-export async function handleCancelRemoveWallet(ctx: any) {
+async function handleCancelRemoveWallet(ctx: any) {
     const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
     
     await ctx.editMessageText(t('buttons.cancel'), { parse_mode: 'HTML' });

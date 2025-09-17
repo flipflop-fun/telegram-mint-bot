@@ -1,5 +1,5 @@
 import { Keypair } from '@solana/web3.js';
-import { db } from '../services/db';
+import { saveWalletsToDatabase } from '../services/db';
 import fs from 'fs';
 import bs58 from 'bs58';
 import { handleBackToMainMenu } from '../utils/bot/navigation';
@@ -18,20 +18,10 @@ export function generateWallets(numWallets: number) {
     return wallets;
 }
 
-// Save wallets to the primary database
-export function saveWalletsToDatabase(wallets: { publicKey: string; privateKey: string }[], telegramUserId: number) {
-    const insertStmt = db.prepare('INSERT INTO wallets (address, private_key, user_id) VALUES (?, ?, ?)');
-    const insertMany = db.transaction((ws: { publicKey: string; privateKey: string }[]) => {
-        for (const wallet of ws) {
-            insertStmt.run(wallet.publicKey, wallet.privateKey, telegramUserId);
-        }
-    });
-    insertMany(wallets);
-    console.log(`Saved ${wallets.length} wallets to the database for user ${telegramUserId}.`);
-}
+
 
 // Save wallets to a file
-export async function saveWalletsToFile(wallett: { publicKey: string; privateKey: string }[], file: string, telegramUserId: number) {
+async function saveWalletsToFile(wallett: { publicKey: string; privateKey: string }[], file: string, telegramUserId: number) {
     fs.writeFileSync(
         file,
         wallett.map(x => `Address: ${x.publicKey}\nPrivate Key: ${x.privateKey}\n`).join('\n'),

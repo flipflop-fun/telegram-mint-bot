@@ -5,15 +5,13 @@ import { PublicKey } from '@solana/web3.js';
 import { 
   getMintData, 
   GetMintDataResponse, 
-  getTokenBalance, 
   loadKeypairFromBase58,
   refundToken,
   RefundTokenResponse
 } from '@flipflop-sdk/node';
 import { UserStateManager, UserState } from '../utils/stateManager';
-import { fetchSingleSplTokenBalances, getMyTokenBalance, getRefundAccountData } from '../services/viewBalances';
+import { getMyTokenBalance, getRefundAccountData } from '../services/viewBalances';
 import { ApiResponse } from '@flipflop-sdk/node/dist/raydium/types';
-import { stat } from 'fs';
 
 // defining refund process state type
 interface RefundState extends UserState {
@@ -321,7 +319,7 @@ async function handleMintAddressInput(ctx: any, userId: number, text: string, t:
 /**
  * Handle refund confirmation with enhanced error handling
  */
-export async function handleRefundConfirmation(ctx: any) {
+async function handleRefundConfirmation(ctx: any) {
   const userId = ctx.from?.id;
   const t = (ctx as any).i18n.t as (k: string, p?: any) => string;
   
@@ -484,7 +482,7 @@ export async function handleRefundConfirmation(ctx: any) {
 /**
  * Handle refund cancellation
  */
-export async function handleRefundCancellation(ctx: any) {
+async function handleRefundCancellation(ctx: any) {
   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
   const userId = ctx.from?.id;
   

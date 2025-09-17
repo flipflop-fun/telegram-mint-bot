@@ -2,15 +2,14 @@ import { Markup } from 'telegraf';
 import { getUserWallets } from '../services/db';
 import { RPC } from '../../config';
 import { 
-  launchToken, 
   mintToken, 
-  generateMetadataUri,
   loadKeypairFromBase58,
-  LaunchTokenOptions,
   MintTokenOptions,
+  MintTokenResponse,
 } from '@flipflop-sdk/node';
 import { PublicKey } from '@solana/web3.js';
 import { UserStateManager, UserState } from '../utils/stateManager';
+import { ApiResponse } from '@flipflop-sdk/node/dist/raydium/types';
 
 // Define mint state interface
 interface MintState extends UserState {
@@ -380,7 +379,7 @@ async function handleBatchMint(ctx: any) {
           minter,
         };
 
-        const mintResult = await mintToken(mintOptions);
+        const mintResult = await mintToken(mintOptions) as ApiResponse<MintTokenResponse>;
 
         if (mintResult.success && mintResult.data) {
           state.data.batchMintResults.successful++;
