@@ -4,12 +4,18 @@ import { RPC } from '../../config';
 import { PublicKey } from '@solana/web3.js';
 import { 
   getMintData, 
+  GetMintDataResponse, 
+  getTokenBalance, 
   loadKeypairFromBase58,
-  refundToken
+  refundToken,
+  RefundTokenResponse
 } from '@flipflop-sdk/node';
 import { UserStateManager, UserState } from '../utils/stateManager';
+import { fetchSingleSplTokenBalances, getMyTokenBalance, getRefundAccountData } from '../services/viewBalances';
+import { ApiResponse } from '@flipflop-sdk/node/dist/raydium/types';
+import { stat } from 'fs';
 
-// 定义退款流程的状态类型
+// defining refund process state type
 interface RefundState extends UserState {
   step: 'enter_mint_address' | 'select_wallet' | 'confirm_refund' | 'processing';
   data?: {
@@ -18,7 +24,7 @@ interface RefundState extends UserState {
   };
 }
 
-// 创建退款流程专用的状态管理器
+// creating refund process state manager
 const refundStateManager = new UserStateManager<RefundState>();
 
 /**
@@ -159,12 +165,12 @@ async function handleMintAddressInput(ctx: any, userId: number, text: string, t:
     }
     
     try {
-      // 验证代币是否存在，增加超时处理
+      // validating token existence with timeout handling
       const mintDataPromise = getMintData({
         rpc: RPC,
         mint: mintPublicKey
       });
-      // 设置30秒超时
+      // setting 30 seconds timeout
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Token validation timeout')), 30000);
       });
@@ -186,10 +192,10 @@ async function handleMintAddressInput(ctx: any, userId: number, text: string, t:
         return;
       }
       
-      // 获取用户钱包并显示选择
+      // getting user wallets and showing selection
       const wallets = getUserWallets(userId);
       if (wallets.length === 0) {
-        await ctx.reply('❌ You have no wallets. Please generate wallets first.', {
+        await ctx.reply(t('refund.no_wallets'), {
           reply_markup: Markup.inlineKeyboard([
             [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
           ]).reply_markup,
@@ -197,7 +203,7 @@ async function handleMintAddressInput(ctx: any, userId: number, text: string, t:
         return;
       }
       
-      // 如果只有一个钱包，直接选择并跳转到确认
+      // if only one wallet, select and jump to confirmation
       if (wallets.length === 1) {
         const selectedWallet = wallets[0];
         refundStateManager.updateState(userId, {
@@ -209,7 +215,7 @@ async function handleMintAddressInput(ctx: any, userId: number, text: string, t:
           }
         });
         
-        // 显示确认消息
+        // showing confirmation message
         await ctx.editMessageText(
           t('refund.confirm_refund', { 
             mintAddress: text,
@@ -228,13 +234,13 @@ async function handleMintAddressInput(ctx: any, userId: number, text: string, t:
         return;
       }
       
-      // 多个钱包时显示选择界面
+      // showing wallet selection interface when multiple wallets exist
       const walletButtons = wallets.map((wallet, index) => {
         const shortAddress = `${wallet.address.slice(0, 6)}...${wallet.address.slice(-6)}`;
         return [Markup.button.callback(`${index + 1}. ${shortAddress}`, `refund_wallet_${index}`)];
       });
       
-      // 更新状态为钱包选择步骤
+      // updating state to wallet selection step
       refundStateManager.updateState(userId, {
         step: 'select_wallet',
         data: {
@@ -351,6 +357,19 @@ export async function handleRefundConfirmation(ctx: any) {
     );
     const refundWallet = state.data.selectedWallet;
     try {
+      // Checking the balance of token before refund
+      const balance = await getMyTokenBalance(new PublicKey(refundWallet.address), new PublicKey(state.data.mintAddress));
+      // Get total mint amount
+      const refundData = await getRefundAccountData(new PublicKey(refundWallet.address), new PublicKey(state.data.mintAddress));
+      const totalMintedTokens = refundData.totalMintFee; // TODO: need to update the parsed data
+      // console.log("balance", balance);
+      // console.log("totalMintedTokens", totalMintedTokens);
+      if (totalMintedTokens.toString() !== balance.value.amount.toString()) {
+        throw new Error(t('refund.minted_amount_mismatch', {
+          mintedAmount: totalMintedTokens.toString() + " Lamports",
+          walletBalance: balance.value.amount.toString() + " Lamports"
+        }));
+      }
       // Load keypair with error handling
       const keypair = loadKeypairFromBase58(refundWallet.private_key);
       // Get token information with timeout
@@ -362,7 +381,7 @@ export async function handleRefundConfirmation(ctx: any) {
         setTimeout(() => reject(new Error('Token info fetch timeout')), 30000);
       });
       
-      const tokenResponse = await Promise.race([tokenInfoPromise, timeoutPromise]) as any;
+      const tokenResponse = await Promise.race([tokenInfoPromise, timeoutPromise]) as ApiResponse<GetMintDataResponse>;
       if (!tokenResponse || !tokenResponse.success) {
         throw new Error('Failed to fetch token information');
       }
@@ -376,7 +395,7 @@ export async function handleRefundConfirmation(ctx: any) {
       const refundTimeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Refund transaction timeout')), 60000);
       });
-      const refundResult = await Promise.race([refundPromise, refundTimeoutPromise]) as any;
+      const refundResult = await Promise.race([refundPromise, refundTimeoutPromise]) as ApiResponse<RefundTokenResponse>;
       if (!refundResult || !refundResult.success) {
         const errorMsg = refundResult?.message || 'Refund transaction failed';
         throw new Error(errorMsg);
@@ -384,7 +403,9 @@ export async function handleRefundConfirmation(ctx: any) {
       const successMessage = t('refund.success', {
         mintAddress: state.data.mintAddress,
         tokenName: tokenInfo.name || t('mint_data.no_name'),
-        signature: refundResult.signature || 'N/A'
+        tokenSymbol: tokenInfo.symbol || t('mint_data.no_name'),
+        signature: refundResult.data.tx || 'N/A',
+        wallet: refundWallet.address,
       });
       await ctx.editMessageText(successMessage, {
         parse_mode: 'HTML',

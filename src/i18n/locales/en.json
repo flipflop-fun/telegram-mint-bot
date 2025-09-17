@@ -182,6 +182,7 @@
     "refund.timeout_error": "❌ <b>Operation Timeout</b>\n\nOperation timed out. Please try again later. If the problem persists, please contact support.",
     "refund.insufficient_balance": "❌ <b>Insufficient Balance</b>\n\nWallet balance is insufficient to complete the refund operation. Please check wallet balance.",
     "refund.invalid_transaction": "❌ <b>Invalid Transaction</b>\n\nTransaction parameters are invalid. Please try the refund operation again.",
+  "refund.minted_amount_mismatch": "❌ <b>Minted amount does not match to the token balance in your wallet!</b>\n\n💰 Minted Amount: {mintedAmount}\n💳 Wallet Balance: {walletBalance}",
     "buttons.confirm_refund": "✅ Confirm Refund",
     "buttons.retry_refund": "🔄 Retry",
     "buttons.back_to_refund": "🔙 Back to Refund Menu",

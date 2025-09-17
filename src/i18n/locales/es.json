@@ -154,6 +154,7 @@
     "refund.timeout_error": "❌ <b>Tiempo de espera de operación agotado</b>\n\nLa operación ha expirado. Por favor, inténtalo más tarde. Si el problema persiste, contacta al soporte.",
     "refund.insufficient_balance": "❌ <b>Saldo insuficiente</b>\n\nEl saldo de la billetera es insuficiente para completar la operación de reembolso. Por favor, verifica el saldo de la billetera.",
     "refund.invalid_transaction": "❌ <b>Transacción inválida</b>\n\nLos parámetros de la transacción son inválidos. Por favor, inténtalo de nuevo con la operación de reembolso.",
+  "refund.minted_amount_mismatch": "❌ <b>¡La cantidad acuñada no coincide con el saldo de tokens en tu cartera!</b>\n\n💰 Cantidad acuñada: {mintedAmount}\n💳 Saldo de la cartera: {walletBalance}",
     "buttons.confirm_refund": "✅ Confirmar reembolso",
     "buttons.retry_refund": "🔄 Reintentar",
     "buttons.back_to_refund": "🔙 Volver al menú de reembolso",

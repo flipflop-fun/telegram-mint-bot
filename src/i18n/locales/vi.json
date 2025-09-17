@@ -153,6 +153,7 @@
   "refund.timeout_error": "❌ <b>Hết thời gian chờ thao tác</b>\n\nThao tác đã hết thời gian chờ. Vui lòng thử lại sau. Nếu vấn đề vẫn tiếp tục, hãy liên hệ hỗ trợ.",
   "refund.insufficient_balance": "❌ <b>Số dư không đủ</b>\n\nSố dư ví không đủ để hoàn thành thao tác hoàn tiền. Vui lòng kiểm tra số dư ví.",
   "refund.invalid_transaction": "❌ <b>Giao dịch không hợp lệ</b>\n\nCác tham số giao dịch không hợp lệ. Vui lòng thử lại thao tác hoàn tiền.",
+  "refund.minted_amount_mismatch": "❌ <b>Số lượng đúc không khớp với số dư token trong ví của bạn!</b>\n\n💰 Số lượng đúc: {mintedAmount}\n💳 Số dư ví: {walletBalance}",
   "buttons.confirm_refund": "✅ Xác Nhận Hoàn Tiền",
   "buttons.retry_refund": "🔄 Thử Lại",
   "buttons.back_to_refund": "🔙 Quay Lại Menu Hoàn Tiền",

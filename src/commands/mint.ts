@@ -123,7 +123,7 @@ export async function handleMintTextInput(ctx: any) {
   }
 
   const state = mintStateManager.getState(userId);
-  console.log(`handleMintTextInput: user status:`, state);
+  // console.log(`handleMintTextInput: user status:`, state);
   if (!state || !state.data) {
     console.log(`handleMintTextInput: no mint status or data, exit`);
     return;

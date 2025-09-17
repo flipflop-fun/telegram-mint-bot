@@ -2,6 +2,8 @@ import { Connection, PublicKey } from '@solana/web3.js';
 import Database from 'better-sqlite3';
 import Bottleneck from 'bottleneck';
 import { RPC, DB_FILE } from '../../config';
+import { getTokenBalance } from '@flipflop-sdk/node';
+import { getAssociatedTokenAddress } from '@solana/spl-token';
 
 // Use the RPC endpoint from config
 const connection = new Connection(RPC, 'confirmed');
@@ -77,6 +79,7 @@ export async function fetchSingleSplTokenBalances(
 
     return tokenAccounts.value.map(({ account }: any) => {
       const tokenAmount = account.data.parsed.info.tokenAmount;
+      console.log("tokenAmount", tokenAmount);
       return {
         mint: account.data.parsed.info.mint,
         balance: tokenAmount.uiAmount || 0,
@@ -112,4 +115,74 @@ export async function viewBalances(userId: number): Promise<
   }));
 
   return balances;
+}
+
+// 定义 TokenRefundData 接口
+interface TokenRefundData {
+  owner: PublicKey;
+  totalTokens: bigint;
+  totalMintFee: bigint;
+  totalReferrerFee: bigint;
+  isProcessing: boolean;
+  vaultTokens: bigint;
+}
+
+function parseTokenRefundData(data: Buffer): TokenRefundData {
+  let offset = 0;
+  const owner = new PublicKey(data.slice(offset, offset + 32));
+  offset += 32;
+  const totalTokens = data.readBigUInt64LE(offset);
+  offset += 8;
+  const totalMintFee = data.readBigUInt64LE(offset);
+  offset += 8;
+  const totalReferrerFee = data.readBigUInt64LE(offset);
+  offset += 8;
+  const isProcessing = data.readUInt8(offset) === 1;
+  offset += 1;
+  const vaultTokens = data.readBigUInt64LE(offset);
+  
+  return {
+    owner,
+    totalTokens,
+    totalMintFee,
+    totalReferrerFee,
+    isProcessing,
+    vaultTokens
+  };
+}
+
+export const getRefundAccountData = async (owner: PublicKey, mint: PublicKey): Promise<TokenRefundData | null> => {
+  try {
+    const [refundAccountPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("refund"), mint.toBuffer(), owner.toBuffer()],
+      new PublicKey("FLipzZfErPUtDQPj9YrC6wp4nRRiVxRkFm3jdFmiPHJV"),
+    );
+    
+    const refundAccountData = await connection.getAccountInfo(refundAccountPda);
+    if (!refundAccountData || !refundAccountData.data) {
+      return null;
+    }
+    
+    // 解析账户数据
+    const parsedData = parseTokenRefundData(refundAccountData.data);
+    
+    // console.log('Parsed refund account data:', {
+    //   owner: parsedData.owner.toString(),
+    //   totalTokens: parsedData.totalTokens.toString(),
+    //   totalMintFee: parsedData.totalMintFee.toString(),
+    //   totalReferrerFee: parsedData.totalReferrerFee.toString(),
+    //   isProcessing: parsedData.isProcessing,
+    //   vaultTokens: parsedData.vaultTokens.toString()
+    // });
+    
+    return parsedData;
+  } catch (error) {
+    console.error("getRefundAccountData error:", error);
+    return null;
+  }
+}
+
+export const getMyTokenBalance = async (owner: PublicKey, mint: PublicKey) => {
+  const ata = await getAssociatedTokenAddress(mint, owner, false);
+  return await connection.getTokenAccountBalance(ata);
 }

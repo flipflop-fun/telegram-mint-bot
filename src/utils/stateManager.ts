@@ -1,8 +1,3 @@
-/**
- * 统一的用户状态管理器
- * 提供状态管理、超时清理和并发保护功能
- */
-
 export interface UserState {
   step: string;
   data?: any;
@@ -14,9 +9,9 @@ export class UserStateManager<T extends UserState = UserState> {
   private locks = new Map<number, boolean>();
   private cleanupInterval: NodeJS.Timeout | null = null;
   
-  // 默认状态超时时间：30分钟
+  // Default state timeout: 30 minutes
   private readonly STATE_TIMEOUT = 30 * 60 * 1000;
-  // 清理检查间隔：5分钟
+  // Cleanup check interval: 5 minutes
   private readonly CLEANUP_INTERVAL = 5 * 60 * 1000;
 
   constructor(stateTimeout?: number, cleanupInterval?: number) {
@@ -31,7 +26,7 @@ export class UserStateManager<T extends UserState = UserState> {
   }
 
   /**
-   * 设置用户状态
+   * setting user state
    */
   setState(userId: number, state: Omit<T, 'timestamp'>): void {
     const stateWithTimestamp = {
@@ -43,7 +38,7 @@ export class UserStateManager<T extends UserState = UserState> {
   }
 
   /**
-   * 获取用户状态
+   * getting user state
    */
   getState(userId: number): T | undefined {
     const state = this.states.get(userId);
@@ -55,7 +50,7 @@ export class UserStateManager<T extends UserState = UserState> {
   }
 
   /**
-   * 更新用户状态的某个字段
+   * updating user state
    */
   updateState(userId: number, updates: Partial<Omit<T, 'timestamp'>>): boolean {
     const currentState = this.getState(userId);
@@ -74,7 +69,7 @@ export class UserStateManager<T extends UserState = UserState> {
   }
 
   /**
-   * 清除用户状态
+   * clearing user state
    */
   clearState(userId: number): void {
     this.states.delete(userId);
@@ -82,43 +77,43 @@ export class UserStateManager<T extends UserState = UserState> {
   }
 
   /**
-   * 检查用户是否有活跃状态
+   * checking if user has active state
    */
   hasState(userId: number): boolean {
     return this.getState(userId) !== undefined;
   }
 
   /**
-   * 检查用户是否被锁定（正在执行操作）
+   * checking if user is locked (preventing concurrent operations)
    */
   isLocked(userId: number): boolean {
     return this.locks.get(userId) || false;
   }
 
   /**
-   * 锁定用户（防止并发操作）
+   * locking user (preventing concurrent operations)
    */
   lock(userId: number): boolean {
     if (this.isLocked(userId)) {
-      return false; // 已经被锁定
+      return false; // already locked
     }
     this.locks.set(userId, true);
     return true;
   }
 
   /**
-   * 解锁用户
+   * unlocking user
    */
   unlock(userId: number): void {
     this.locks.delete(userId);
   }
 
   /**
-   * 带锁执行操作
+   * executing operation with user lock (preventing concurrent operations)
    */
   async withLock<R>(userId: number, operation: () => Promise<R>): Promise<R | null> {
     if (!this.lock(userId)) {
-      return null; // 无法获取锁
+      return null; // cannot get lock
     }
 
     try {
@@ -129,14 +124,14 @@ export class UserStateManager<T extends UserState = UserState> {
   }
 
   /**
-   * 检查状态是否过期
+   * checking if state is expired
    */
   private isStateExpired(state: T): boolean {
     return Date.now() - state.timestamp > this.STATE_TIMEOUT;
   }
 
   /**
-   * 清理过期状态
+   * cleaning up expired states
    */
   private cleanupExpiredStates(): void {
     const now = Date.now();
@@ -158,7 +153,7 @@ export class UserStateManager<T extends UserState = UserState> {
   }
 
   /**
-   * 启动清理定时器
+   * starting cleanup timer
    */
   private startCleanupTimer(): void {
     this.cleanupInterval = setInterval(() => {
@@ -167,7 +162,7 @@ export class UserStateManager<T extends UserState = UserState> {
   }
 
   /**
-   * 停止清理定时器
+   * stopping cleanup timer
    */
   stopCleanup(): void {
     if (this.cleanupInterval) {
@@ -177,7 +172,7 @@ export class UserStateManager<T extends UserState = UserState> {
   }
 
   /**
-   * 获取统计信息
+   * getting statistics
    */
   getStats(): {
     totalStates: number;
@@ -202,7 +197,7 @@ export class UserStateManager<T extends UserState = UserState> {
   }
 
   /**
-   * 清理所有状态（用于测试或重启）
+   * cleaning up all states (for testing or restart)
    */
   clearAll(): void {
     this.states.clear();
@@ -210,10 +205,10 @@ export class UserStateManager<T extends UserState = UserState> {
   }
 }
 
-// 创建全局实例
+// creating global instance
 export const globalStateManager = new UserStateManager();
 
-// 进程退出时清理
+// cleaning up on process exit
 process.on('SIGINT', () => {
   globalStateManager.stopCleanup();
 });

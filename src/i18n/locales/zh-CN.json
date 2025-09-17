@@ -181,6 +181,7 @@
     "refund.timeout_error": "❌ <b>操作超时</b>\n\n操作超时，请稍后重试。如果问题持续存在，请联系客服。",
     "refund.insufficient_balance": "❌ <b>余额不足</b>\n\n钱包余额不足以完成退款操作，请检查钱包余额。",
     "refund.invalid_transaction": "❌ <b>交易无效</b>\n\n交易参数无效，请重新尝试退款操作。",
+  "refund.minted_amount_mismatch": "❌ <b>铸造数量与您钱包中的代币余额不匹配！</b>\n\n💰 铸造数量: {mintedAmount}\n💳 钱包余额: {walletBalance}",
     "buttons.confirm_refund": "✅ 确认退款",
     "buttons.retry_refund": "🔄 重试",
     "buttons.back_to_refund": "🔙 返回退款菜单",

@@ -156,6 +156,7 @@
     "refund.timeout_error": "❌ <b>Délai d'attente de l'opération</b>\n\nL'opération a expiré. Veuillez réessayer plus tard. Si le problème persiste, contactez le support.",
     "refund.insufficient_balance": "❌ <b>Solde insuffisant</b>\n\nLe solde du portefeuille est insuffisant pour terminer l'opération de remboursement. Veuillez vérifier le solde du portefeuille.",
     "refund.invalid_transaction": "❌ <b>Transaction invalide</b>\n\nLes paramètres de transaction sont invalides. Veuillez réessayer l'opération de remboursement.",
+  "refund.minted_amount_mismatch": "❌ <b>Le montant frappé ne correspond pas au solde de tokens dans votre portefeuille !</b>\n\n💰 Montant frappé: {mintedAmount}\n💳 Solde du portefeuille: {walletBalance}",
     "buttons.confirm_refund": "✅ Confirmer le remboursement",
     "buttons.retry_refund": "🔄 Réessayer",
     "buttons.back_to_refund": "🔙 Retour au menu de remboursement",

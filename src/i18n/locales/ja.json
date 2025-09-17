@@ -137,6 +137,7 @@
   "refund.enter_mint_address": "🪙 <b>SPLトークン返金</b>\n\n返金するトークンアドレス（Mint Address）を入力してください：",
   "refund.invalid_mint_address": "❌ 無効なトークンアドレス形式\n\n有効なトークンアドレス（Mint Address）を入力してください：",
   "refund.select_wallet": "💳 <b>返金ウォレットを選択</b>\n\n💰 トークンアドレス：<code>{mintAddress}</code>\n\n返金を受け取るウォレットを選択してください：",
+  "refund.minted_amount_mismatch": "❌ <b>鋳造数量がウォレットのトークン残高と一致しません！</b>\n\n💰 鋳造数量: {mintedAmount}\n💳 ウォレット残高: {walletBalance}",
   "refund.confirm_refund": "🪙 <b>返金情報を確認</b>\n\n💰 トークンアドレス：<code>{mintAddress}</code>\n\n⚠️ <b>注意：</b>\n• 返金操作は元に戻せません\n• このトークンへの投資をすべて返金します\n• 返金手数料が発生する場合があります\n• 返金ウォレットの残高が総鋳造量と一致することを確認してください\n\n返金を続行することを確認しますか？",
   "refund.processing": "⏳ <b>返金処理中...</b>\n\n💰 トークンアドレス：<code>{mintAddress}</code>\n\nお待ちください。数秒かかる場合があります...",
   "refund.success": "🎉 <b>返金成功！</b>\n\n💰 トークンアドレス：<code>{mintAddress}</code>\n📄 取引ハッシュ：<code>{signature}</code>\n💳 返金ウォレット：{wallet}\n\n返金が正常に処理され、資金がウォレットに返金されます。",
