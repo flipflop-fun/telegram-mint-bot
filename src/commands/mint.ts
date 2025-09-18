@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf';
-import { getUserNetwork, getUserWallets } from '../services/db';
+import { getUserWallets } from '../services/db';
 import { getUserRpcUrl, getUserExplorerUrl } from '../utils/solana/rpc';
 import { 
   mintToken, 
@@ -226,7 +226,6 @@ export async function handleMintTextInput(ctx: any) {
  */
 async function showMinterSelection(ctx: any, userId: number, t: any) {
   const wallets = getUserWallets(userId);
-  console.log("user network", getUserNetwork(userId));
   
   if (wallets.length === 0) {
     await ctx.reply(t('wallet.no_wallets'), {

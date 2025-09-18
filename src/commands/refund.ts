@@ -1,5 +1,5 @@
 import { Markup } from 'telegraf';
-import { getUserNetwork, getUserWallets } from '../services/db';
+import { getUserWallets } from '../services/db';
 import { getUserRpcUrl } from '../utils/solana/rpc';
 import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { 
@@ -211,8 +211,6 @@ async function handleMintAddressInput(ctx: any, userId: number, text: string, t:
       }
       
       // getting user wallets and showing selection
-      console.log("user network", getUserNetwork(userId));
-
       const wallets = getUserWallets(userId);
       if (wallets.length === 0) {
         await ctx.reply(t('refund.no_wallets'), {

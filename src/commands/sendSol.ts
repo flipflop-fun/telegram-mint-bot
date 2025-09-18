@@ -1,6 +1,6 @@
 import { Markup } from 'telegraf';
 import { PublicKey, SystemProgram, LAMPORTS_PER_SOL, Keypair } from '@solana/web3.js';
-import { getUserNetwork, getUserWallets } from '../services/db';
+import { getUserWallets } from '../services/db';
 import { createTransaction, sendTransaction } from '../utils/solana/transaction';
 import { getUserConnection, getUserExplorerUrl } from '../utils/solana/rpc';
 import bs58 from 'bs58';
@@ -40,7 +40,6 @@ async function handleSendSol(ctx: any) {
   
   // Get user wallets
   const wallets = getUserWallets(userId);
-  console.log("user network", getUserNetwork(userId));
 
   if (wallets.length === 0) {
     await ctx.reply('❌ You have no wallets. Please generate wallets first.', {

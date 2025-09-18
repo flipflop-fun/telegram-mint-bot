@@ -1,7 +1,7 @@
 import { Markup } from 'telegraf';
 import { PublicKey, Keypair } from '@solana/web3.js';
 import { createTransferInstruction, getAssociatedTokenAddress, TOKEN_PROGRAM_ID, getMint, getAccount, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
-import { getUserNetwork, getUserWallets } from '../services/db';
+import { getUserWallets } from '../services/db';
 import { createTransaction, sendTransaction } from '../utils/solana/transaction';
 import { getUserConnection, getUserExplorerUrl } from '../utils/solana/rpc';
 import bs58 from 'bs58';
@@ -43,8 +43,7 @@ async function handleSendSpl(ctx: any) {
   
   // Get user wallets
   const wallets = getUserWallets(userId);
-  console.log("user network", getUserNetwork(userId));
-  
+
   if (wallets.length === 0) {
     await ctx.reply('❌ You have no wallets. Please generate wallets first.', {
       reply_markup: Markup.inlineKeyboard([

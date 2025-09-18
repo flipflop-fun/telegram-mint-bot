@@ -3,7 +3,6 @@ import { getUrcData, GetUrcDataResponse } from '@flipflop-sdk/node';
 import { getUserRpcUrl } from '../utils/solana/rpc';
 import { UserStateManager, UserState } from '../utils/stateManager';
 import { ApiResponse } from '@flipflop-sdk/node/dist/raydium/types';
-import { getUserNetwork } from '../services/db';
 
 // Define get URC state interface
 interface GetUrcState extends UserState {
@@ -112,7 +111,6 @@ async function handleUrcValueInput(ctx: any, userId: number, text: string, t: an
     const loadingMessage = await ctx.reply('Loading...', {
       parse_mode: 'HTML'
     });
-    console.log("user network", getUserNetwork(userId));
 
     try {
       // Fetch URC data using FlipFlop SDK
