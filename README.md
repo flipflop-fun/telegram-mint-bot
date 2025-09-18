@@ -1,183 +1,234 @@
+# Flipflop Mint Bot
 
-# SolTelegramBot
+A powerful Telegram bot for Solana blockchain operations, built with TypeScript and the Flipflop SDK. This bot provides a user-friendly interface for wallet management, token minting, transfers, and various Solana blockchain interactions.
 
-**SolTelegramBot** is a locally run Telegram bot for managing Solana wallets and tokens. It allows users to generate wallets, view balances, distribute SOL and SPL tokens, and manage their keys—all through an easy-to-use Telegram interface. 
+## 🌟 Features
 
----
+### 💳 Wallet Management
+- **Generate Wallets**: Create new Solana wallets (1-100 wallets)
+- **My Wallets**: View and manage existing wallets with real-time balance updates
+- **Secure Storage**: Encrypted wallet storage with SQLCipher
 
-## Features
+### 🪙 Token Operations
+- **Mint Tokens**: Create new SPL tokens on Solana
+- **Token Data**: View detailed token information and metadata
+- **SPL Token Management**: Send and receive SPL tokens
 
-- 💳 **Generate Wallets**: Quickly create Solana wallets with secure private keys.
-- 📜 **Manage Wallets**: View, remove, or interact with your wallets.
-- 💰 **View Balances**: Check SOL and SPL token balances for all wallets.
-- 💸 **Distribute Tokens**: Send SOL or SPL tokens to multiple addresses efficiently.
-- 🔒 **Secure Private Keys**: Private keys are stored locally on your machine and displayed only when you require.
-- ⚙️ **Customizable Endpoints**: Option to use your own RPC endpoint for transactions. (recommended)
+### 💸 Transfer Functions
+- **Send SOL**: Transfer SOL tokens between wallets
+- **Send SPL**: Transfer SPL tokens with support for custom amounts
+- **Batch Operations**: Even distribution and single transfer modes
 
----
+### 🔧 Additional Features
+- **Refund Operations**: Process refund transactions
+- **URC Info**: Retrieve URC-related data
+- **Multi-language Support**: 8 languages (English, Chinese, Spanish, French, Japanese, Russian, Vietnamese)
+- **Network Selection**: Switch between Mainnet and Devnet
+- **Real-time Updates**: Live balance and transaction status updates
 
-## Installation
-
-Follow these steps to set up and run `SolTelegramBot` on your local machine.
+## 🚀 Quick Start
 
 ### Prerequisites
 
-1. **Node.js** (v16 or higher recommended)
-   - Download and install Node.js from the [official website](https://nodejs.org/).
-   - Alternatively, you can use the following commands to install Node.js on your system:
+- Node.js (v16 or higher)
+- npm or yarn
+- Telegram Bot Token (from [@BotFather](https://t.me/botfather))
 
-     **For Linux/macOS**:
-     ```bash
-     curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
-     sudo apt-get install -y nodejs
-     ```
+### Installation
 
-     **For Windows**:
-     - Download the installer from the [Node.js website](https://nodejs.org/).
-     - Run the installer and follow the setup instructions.
-
-     After installation, verify the version:
-     ```bash
-     node -v
-     npm -v
-     ```
-
-2. **Telegram Bot Token** 
-   - Obtain a token from [BotFather](https://core.telegram.org/bots#botfather).
-
-3. **RPC Endpoint**
-   - Create a free [RPC endpoint on Helius](https://www.helius.dev) (optional but recommended for enhanced performance and reliability).
-
-
-### Quick Start (Windows Users)
-
-For Windows users, a convenient `run.bat` script is included to streamline the setup and launch process. This script automates checking for prerequisites, installing dependencies, and starting the bot.
-Make sure you get your bot token first before running `run.bat`:
-
-**Get Your Bot Token**:
-   - Open Telegram and search for [BotFather](https://core.telegram.org/bots#botfather).
-   - Start a chat with BotFather and use the `/newbot` command.
-   - Follow the instructions to name your bot and choose a username for it.
-   - BotFather will provide you with a token. Copy this token for later use.
-   - Save the link to your newly created bot as you'll need to directly message it later.
-   - *(Optional)* You can register custom commands (e.g., `/start`, `/help`) for your bot by using the `/setcommands` command in BotFather. This allows users to interact with predefined commands for further customization.
-
-#### Steps to Use `run.bat`:
-
-1. **Locate `run.bat`**:  
-   Ensure the `run.bat` file is in the root directory of your project (where `bot.js` is located).
-
-2. **Run the Script**:  
-   Double-click on the `run.bat` file or execute it in the command prompt:
-   ```cmd
-   run.bat
-   ```
-
-3. **Follow the Instructions**:
-   - The script will verify that Node.js is installed. If it's missing, you'll be prompted to install it.
-   - It will check for dependencies and install them automatically.
-   - If the `.env` file is missing, it will create one with placeholders for the bot token and RPC endpoint.
-
-4. **Start the Bot**:  
-   Once the script completes, the bot will launch. Open Telegram and send a `/start` message to your bot to begin using it.
-
-#### Notes:
-- Ensure you update the `.env` file with your bot token and any optional custom RPC endpoint.
-- If any errors occur, they will be displayed in the command prompt. You can troubleshoot and re-run the script after resolving them.
-
-
-
-### Manual installation
-
-1. **Clone the Repository**:
+1. **Clone the repository**
    ```bash
-   git clone https://github.com/loguru-log/SolTelegramBot
-   cd SolTelegramBot
+   git clone <repository-url>
+   cd telegram_mint_bot
    ```
 
-2. **Install Dependencies**:
+2. **Install dependencies**
    ```bash
    npm install
+   # or
+   yarn install
    ```
 
-3. **Get Your Bot Token**:
-   - Open Telegram and search for [BotFather](https://core.telegram.org/bots#botfather).
-   - Start a chat with BotFather and use the `/newbot` command.
-   - Follow the instructions to name your bot and choose a username for it.
-   - BotFather will provide you with a token. Copy this token for later use.
-   - Save the link to your newly created bot as you'll need to directly message it later.
-   - *(Optional)* You can register custom commands (e.g., `/start`, `/help`) for your bot by using the `/setcommands` command in BotFather. This allows users to interact with predefined commands for further customization.
-
-
-4. **Set Up `.env` File**:
-   Create a new `.env.example` file in the root directory and remove the `.example` extention:
-   ```bash
-   BOT_TOKEN=your_telegram_bot_token
+3. **Environment Setup**
+   
+   Create a `.env` file in the root directory:
+   ```env
+   BOT_TOKEN=your_telegram_bot_token_here
+   DB_ENCRYPTION_KEY=your_secure_encryption_key_here
+   NETWORK=mainnet
    MAINNET_RPC=https://api.mainnet-beta.solana.com
+   DEVNET_RPC=https://api.devnet.solana.com
+   DB_FILE=src/data/wallets.db
    ```
-   - Replace `your_telegram_bot_token` with the token from [BotFather](https://core.telegram.org/bots#botfather).
-   - You can optionally provide a custom RPC endpoint for `MAINNET_RPC`. (recommended)
 
-5. **Run the Bot**:
+4. **Start the bot**
    ```bash
-   node bot.js
+   # Development mode
+   npm run dev
+   # or
+   yarn dev
+   
+   # Production mode
+   npm run build
+   npm start
    ```
-    - You should see the bot successfully launching in the terminal.
-    - Open Telegram and send a message to the bot you created. Use `/start` to interact with it.
+
+## 📋 Available Commands
+
+### Development Scripts
+
+- `npm run dev` - Start development server with hot reload
+- `npm run build` - Build TypeScript to JavaScript
+- `npm run start` - Start production server
+- `npm run typecheck` - Run TypeScript type checking
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `BOT_TOKEN` | Telegram Bot Token from BotFather | - | ✅ |
+| `DB_ENCRYPTION_KEY` | Database encryption key | `default-encryption-key-change-in-production` | ⚠️ |
+| `NETWORK` | Solana network (`mainnet` or `devnet`) | `mainnet` | ❌ |
+| `MAINNET_RPC` | Mainnet RPC endpoint | `https://api.mainnet-beta.solana.com` | ❌ |
+| `DEVNET_RPC` | Devnet RPC endpoint | `https://api.devnet.solana.com` | ❌ |
+| `DB_FILE` | Database file path | `src/data/wallets.db` | ❌ |
+
+### Security Notes
+
+⚠️ **Important**: Change the `DB_ENCRYPTION_KEY` in production to ensure wallet security.
+
+## 🏗️ Project Structure
+
+```
+telegram_mint_bot/
+├── bot.ts                 # Main bot entry point
+├── config.ts             # Configuration and environment variables
+├── package.json          # Dependencies and scripts
+├── tsconfig.json         # TypeScript configuration
+├── nodemon.json          # Development server configuration
+└── src/
+    ├── commands/         # Bot command handlers
+    │   ├── generateWallets.ts
+    │   ├── myWallets.ts
+    │   ├── mint.ts
+    │   ├── sendSol.ts
+    │   ├── sendSpl.ts
+    │   ├── mintData.ts
+    │   ├── refund.ts
+    │   ├── getUrc.ts
+    │   └── help.ts
+    ├── i18n/            # Internationalization
+    │   ├── i18n.ts
+    │   └── locales/     # Translation files
+    │       ├── en.json
+    │       ├── zh-CN.json
+    │       ├── zh-TW.json
+    │       ├── es.json
+    │       ├── fr.json
+    │       ├── ja.json
+    │       ├── ru.json
+    │       └── vi.json
+    ├── services/        # Core services
+    │   └── db.ts       # Database operations
+    ├── utils/          # Utility functions
+    └── scripts/        # Helper scripts
+```
+
+## 🌐 Supported Languages
+
+The bot supports 8 languages with full localization:
+
+- 🇺🇸 English (en)
+- 🇨🇳 Chinese Simplified (zh-CN)
+- 🇹🇼 Chinese Traditional (zh-TW)
+- 🇪🇸 Spanish (es)
+- 🇫🇷 French (fr)
+- 🇯🇵 Japanese (ja)
+- 🇷🇺 Russian (ru)
+- 🇻🇳 Vietnamese (vi)
+
+## 🔒 Security Features
+
+- **Encrypted Database**: All wallet data is encrypted using SQLCipher
+- **Private Key Protection**: Private keys are stored securely and only displayed when requested
+- **Network Isolation**: Separate configurations for mainnet and devnet
+- **Input Validation**: Comprehensive validation for all user inputs
+
+## 🛠️ Development
+
+### Setting up Development Environment
+
+1. **Install dependencies**
+   ```bash
+   yarn install
+   ```
+
+2. **Start development server**
+   ```bash
+   yarn dev
+   ```
+
+3. **Type checking**
+   ```bash
+   yarn typecheck
+   ```
+
+### Code Structure
+
+- **Commands**: Each bot feature is implemented as a separate command module
+- **Services**: Core business logic and database operations
+- **Utils**: Shared utility functions and helpers
+- **i18n**: Internationalization support with JSON translation files
+
+### Adding New Features
+
+1. Create a new command file in `src/commands/`
+2. Register the command in `bot.ts`
+3. Add translations to all locale files in `src/i18n/locales/`
+4. Update the help text if needed
+
+## 📦 Dependencies
+
+### Core Dependencies
+- **@flipflop-sdk/node**: Flipflop SDK for Solana operations
+- **@solana/web3.js**: Solana JavaScript SDK
+- **@solana/spl-token**: SPL Token operations
+- **telegraf**: Telegram Bot API framework
+- **better-sqlite3**: SQLite database with encryption support
+
+### Development Dependencies
+- **TypeScript**: Type-safe JavaScript
+- **nodemon**: Development server with hot reload
+- **ts-node**: TypeScript execution environment
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🆘 Support
+
+If you encounter any issues or have questions:
+
+1. Check the [Issues](../../issues) section
+2. Create a new issue with detailed information
+3. Join our community discussions
+
+## 🔄 Version History
+
+- **v1.1.6**: Current version with multi-language support and enhanced features
+- **v1.1.x**: Added internationalization and improved UI
+- **v1.0.x**: Initial release with core functionality
 
 ---
 
-## Configuration
-
-The bot uses environment variables for sensitive information. Here's a breakdown:
-
-| Variable        | Description                                        | Default                               |
-|------------------|----------------------------------------------------|---------------------------------------|
-| `BOT_TOKEN`      | Token for your Telegram bot (from BotFather)       | **Required**                          |
-| `MAINNET_RPC`    | Solana Mainnet RPC endpoint                        | `https://api.mainnet-beta.solana.com` |
-| `DB_FILE`        | Path to the SQLite database for wallet storage     | `src/data/wallets.db`                 |
-
----
-
-## Usage
-
-### Bot Commands
-
-- **/start**: Access the main menu.
-- **Generate Wallets**: Create and save new Solana wallets.
-- **My Wallets**: View balances, private keys, or remove wallets.
-- **Distribute Tokens**: Send SOL or SPL tokens to multiple addresses.
-- **Help**: Learn how to use the bot.
-
-### Inline Features
-
-- **Manage Wallets**: View wallets with real-time SOL and SPL balances.
-- **Token Management**: Quickly distribute tokens or inspect wallet details.
-
----
-
-## Security
-
-1. 🔐 **Private Keys**: Private keys are only displayed upon request and hidden after use. Ensure they are stored securely.
-2. 💾 **Database**: Wallets are saved locally on your machine in a SQLite database (`wallets.db`).
-3. ⚠️ **Data Cleanup**: Regularly clear chat history containing sensitive data like `.txt` wallet files.
-
----
-
-## Troubleshooting
-
-- **Bot fails to start**:
-  - Ensure `BOT_TOKEN` is correctly set in `.env`.
-  - Verify Node.js and npm are installed and up-to-date.
-
-- **No response from bot**:
-  - Check your internet connection.
-  - Ensure the Telegram bot token is valid.
-
-- **RPC endpoint errors**:
-  - Verify the `MAINNET_RPC` endpoint in the `.env` file.
-
-For additional help, open an issue in this repository.
-
----
-
+**⚠️ Disclaimer**: This bot handles cryptocurrency operations. Always test on devnet before using on mainnet. Keep your private keys secure and never share them with anyone.
