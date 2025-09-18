@@ -6,6 +6,7 @@ import { UserStateManager, UserState } from '../utils/stateManager';
 import { ApiResponse } from '@flipflop-sdk/node/dist/raydium/types';
 import https from 'https';
 import http from 'http';
+import { getUserNetwork } from '../services/db';
 
 // Define mint data state interface
 interface MintDataState extends UserState {
@@ -197,6 +198,7 @@ export async function handleMintDataAddressInput(ctx: any) {
 
   try {
     // Fetch mint data using FlipFlop SDK
+    console.log("user network", getUserNetwork(userId));
     const response = await getMintData({
       rpc: getUserRpcUrl(userId),
       mint: new PublicKey(mintAddress)

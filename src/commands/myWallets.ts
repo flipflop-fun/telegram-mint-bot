@@ -1,4 +1,4 @@
-import { getUserWallets, removeWallet, getWalletCount, getWalletByAddress, saveWalletsToDatabase } from '../services/db';
+import { getUserWallets, removeWallet, getWalletCount, getWalletByAddress, saveWalletsToDatabase, getUserNetwork } from '../services/db';
 import { Markup } from 'telegraf';
 import { generateWallets } from './generateWallets';
 import { viewBalances, fetchMultipleSolBalances } from '../services/viewBalances';
@@ -14,6 +14,7 @@ export async function handleMyWallets(ctx: any, page = 1, isEdit = false) {
     const fetchingMessage = await ctx.reply(t('wallets.fetching'));
 
     const wallets = getUserWallets(userId);
+    console.log("user network", getUserNetwork(userId));
 
     if (!wallets || wallets.length === 0) {
         const noWalletMessage = t('wallets.none');
