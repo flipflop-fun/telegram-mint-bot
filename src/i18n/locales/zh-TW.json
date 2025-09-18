@@ -190,7 +190,7 @@
   "errors.spl_program_error": "❌ 由於 SPL Token 程序錯誤，交易失敗。請確保接收錢包有效且代幣數量正確。",
   "lang.menu_title": "🌐 選擇你的語言：",
   "lang.updated": "✅ 語言已更新。",
-  "settings.menu_title": "⚙️ 設定",
+  "settings.menu_title": "⚙️ 設定\n\n请选择要配置的选项：",
   "network.menu_title": "🌐 網路設定",
   "network.devnet": "開發網路 (Devnet)",
   "network.mainnet": "主網路 (Mainnet)",

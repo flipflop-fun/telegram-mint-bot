@@ -163,7 +163,7 @@
   "errors.spl_program_error": "❌ SPLトークンプログラムのエラーにより取引が失敗しました。受信ウォレットが有効で、トークン量が正しいことを確認してください。",
   "lang.menu_title": "🌐 言語を選択してください：",
   "lang.updated": "✅ 言語が更新されました。",
-  "settings.menu_title": "⚙️ <b>設定</b>\n\n設定するオプションを選択してください：",
+  "settings.menu_title": "⚙️ 設定\n\n設定するオプションを選択してください：",
   "network.menu_title": "🌐 ネットワークを選択してください：",
   "network.devnet": "Devnet（テストネットワーク）",
   "network.mainnet": "Mainnet（メインネットワーク）",

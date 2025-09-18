@@ -167,11 +167,27 @@ bot.action(/^set_network_(.+)$/, async (ctx) => {
   const i18n = (ctx as any).i18n as { t: (k: string, p?: any) => string };
   const t = i18n.t;
   
-  setUserNetwork(userId, network);
-  
-  // Answer the callback query first
-  const networkName = network === 'devnet' ? t('network.devnet') : t('network.mainnet');
-  await ctx.answerCbQuery(t('network.updated', { network: networkName }));
+  try {
+    // 确保网络设置立即生效
+    await setUserNetwork(userId, network);
+    
+    // 验证网络切换是否成功
+    const currentNetwork = getUserNetwork(userId);
+    if (currentNetwork !== network) {
+      await ctx.answerCbQuery(t('network.error', { network: network }));
+      return;
+    }
+    
+    // Answer the callback query with success message
+    const networkName = network === 'devnet' ? t('network.devnet') : t('network.mainnet');
+    await ctx.answerCbQuery(t('network.updated', { network: networkName }));
+    
+    console.log(`✅ User ${userId} successfully switched to ${network}`);
+  } catch (error) {
+    console.error(`❌ Failed to switch network for user ${userId}:`, error);
+    await ctx.answerCbQuery(t('network.error', { network: network }));
+    return;
+  }
   
   // Return to settings menu
   const buttons = [

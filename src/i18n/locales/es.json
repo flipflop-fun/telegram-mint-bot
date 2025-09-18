@@ -163,7 +163,7 @@
   "errors.spl_program_error": "❌ Transacción fallida por un error en el programa SPL Token. Verifica que el monedero destinatario sea válido y la cantidad correcta.",
   "lang.menu_title": "🌐 Selecciona tu idioma:",
   "lang.updated": "✅ Idioma actualizado.",
-  "settings.menu_title": "⚙️ <b>Configuración</b>\n\nPor favor selecciona una opción para configurar:",
+  "settings.menu_title": "⚙️ Configuración\n\nPor favor selecciona una opción para configurar:",
   "network.menu_title": "🌐 Selecciona la red:",
   "network.devnet": "Devnet (Red de prueba)",
   "network.mainnet": "Mainnet (Red principal)",

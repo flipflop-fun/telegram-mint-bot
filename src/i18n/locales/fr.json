@@ -163,7 +163,7 @@
     "buttons.retry_refund": "🔄 Réessayer",
     "buttons.back_to_refund": "🔙 Retour au menu de remboursement",
   "errors.spl_program_error": "❌ Transaction échouée en raison d'une erreur dans le programme SPL Token. Assurez-vous que le portefeuille destinataire est valide et que le montant du token est correct.",
-  "settings.menu_title": "⚙️ <b>Paramètres</b>\n\nVeuillez sélectionner une option à configurer :",
+  "settings.menu_title": "⚙️ Paramètres\n\nVeuillez sélectionner une option à configurer :",
   "network.menu_title": "🌐 Sélectionnez le réseau :",
   "network.devnet": "Devnet (Réseau de test)",
   "network.mainnet": "Mainnet (Réseau principal)",

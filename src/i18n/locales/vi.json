@@ -163,7 +163,7 @@
   "errors.spl_program_error": "❌ Giao dịch thất bại do lỗi chương trình token SPL. Đảm bảo ví nhận hợp lệ và số lượng token chính xác.",
   "lang.menu_title": "🌐 Chọn ngôn ngữ:",
   "lang.updated": "✅ Ngôn ngữ đã được cập nhật.",
-  "settings.menu_title": "⚙️ <b>Cài Đặt</b>\n\nVui lòng chọn tùy chọn để cấu hình:",
+  "settings.menu_title": "⚙️ Cài Đặt\n\nVui lòng chọn tùy chọn để cấu hình:",
   "network.menu_title": "🌐 Vui lòng chọn mạng:",
   "network.devnet": "Devnet (Mạng thử nghiệm)",
   "network.mainnet": "Mainnet (Mạng chính)",

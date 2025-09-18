@@ -382,9 +382,7 @@ async function handleRefundConfirmation(ctx: any) {
       }
       // Get total mint amount
       const refundData = await getRefundAccountData(new PublicKey(refundWallet.address), new PublicKey(state.data.mintAddress), userId);
-      const totalMintedTokens = refundData.totalMintFee; // TODO: need to update the parsed data
-      // console.log("balance", balance);
-      // console.log("totalMintedTokens", totalMintedTokens);
+      const totalMintedTokens = refundData.totalMintFee;
       if (totalMintedTokens.toString() !== balance.value.amount.toString()) {
         throw new Error(t('refund.minted_amount_mismatch', {
           mintedAmount: formatLamportsToSol(totalMintedTokens),

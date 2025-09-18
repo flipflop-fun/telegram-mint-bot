@@ -238,26 +238,18 @@ function getUserNetwork(userId: number): string {
   }
 }
 
-function setUserNetwork(userId: number, network: string): void {
-  try {
-    let error: Error | null = null;
-    let completed = false;
-    
+function setUserNetwork(userId: number, network: string): Promise<void> {
+  return new Promise((resolve, reject) => {
     db.run('INSERT OR REPLACE INTO user_settings (user_id, lang, network) VALUES (?, COALESCE((SELECT lang FROM user_settings WHERE user_id = ?), \'en\'), ?)', [userId, userId, network], function(err: Error | null) {
       if (err) {
-        error = err;
+        console.error('Error setting user network:', err);
+        reject(err);
+      } else {
+        console.log(`✅ Network updated for user ${userId}: ${network}`);
+        resolve();
       }
-      completed = true;
     });
-    
-    require('deasync').loopWhile(() => !completed);
-    
-    if (error) {
-      throw error;
-    }
-  } catch (error) {
-    console.error('Error setting user network:', error);
-  }
+  });
 }
 
 // ensure tables exist
