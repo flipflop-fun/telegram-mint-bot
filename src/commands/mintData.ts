@@ -4,6 +4,8 @@ import { getMintData, GetMintDataResponse } from '@flipflop-sdk/node';
 import { getUserRpcUrl, getUserExplorerUrl } from '../utils/solana/rpc';
 import { UserStateManager, UserState } from '../utils/stateManager';
 import { ApiResponse } from '@flipflop-sdk/node/dist/raydium/types';
+import https from 'https';
+import http from 'http';
 
 // Define mint data state interface
 interface MintDataState extends UserState {
@@ -16,12 +18,86 @@ interface MintDataState extends UserState {
 // Create mint data state manager instance
 const mintDataStateManager = new UserStateManager<MintDataState>();
 
+// Helper function to fetch data from URI with redirect support
+async function fetchUriData(uri: string, maxRedirects: number = 5): Promise<any> {
+  return new Promise((resolve, reject) => {
+    if (maxRedirects <= 0) {
+      reject(new Error('Too many redirects'));
+      return;
+    }
+
+    try {
+      const url = new URL(uri);
+      const client = url.protocol === 'https:' ? https : http;
+      
+      const request = client.get(uri, (response) => {
+        const statusCode = response.statusCode || 0;
+        
+        // Handle redirects (301, 302, 303, 307, 308)
+        if (statusCode >= 300 && statusCode < 400) {
+          const location = response.headers.location;
+          if (location) {
+            // Recursively follow redirect
+            fetchUriData(location, maxRedirects - 1)
+              .then(resolve)
+              .catch(reject);
+            return;
+          } else {
+            reject(new Error(`HTTP ${statusCode}: No location header for redirect`));
+            return;
+          }
+        }
+        
+        // Check for other non-successful status codes
+        if (statusCode < 200 || statusCode >= 400) {
+          reject(new Error(`HTTP ${statusCode}: ${response.statusMessage}`));
+          return;
+        }
+        
+        let data = '';
+        
+        response.on('data', (chunk) => {
+          data += chunk;
+        });
+        
+        response.on('end', () => {
+          try {
+            if (!data.trim()) {
+              reject(new Error('Empty response data'));
+              return;
+            }
+            const jsonData = JSON.parse(data);
+            resolve(jsonData);
+          } catch (error) {
+            reject(new Error(`Failed to parse JSON data: ${error instanceof Error ? error.message : 'Unknown error'}`));
+          }
+        });
+        
+        response.on('error', (error) => {
+          reject(new Error(`Response error: ${error.message}`));
+        });
+      });
+      
+      request.on('error', (error) => {
+        reject(new Error(`Request error: ${error.message}`));
+      });
+      
+      request.setTimeout(10000, () => {
+        request.destroy();
+        reject(new Error('Request timeout after 10 seconds'));
+      });
+      
+    } catch (error) {
+      reject(new Error(`Invalid URI: ${error instanceof Error ? error.message : 'Unknown error'}`));
+    }
+  });
+}
+
 // Helper function to safely edit message or send new one if edit fails
 async function safeEditOrReply(ctx: any, text: string, options: any) {
   try {
     await ctx.editMessageText(text, options);
   } catch (error) {
-    console.log('Failed to edit message, sending new message instead:', error.message);
     // Remove reply_markup from options and send as new message
     const replyOptions = { ...options };
     await ctx.reply(text, replyOptions);
@@ -193,6 +269,29 @@ export async function handleMintDataAddressInput(ctx: any) {
         reply_markup: Markup.inlineKeyboard(buttons).reply_markup,
       }
     );
+
+    // Try to fetch and display image if URI is available
+    if (mintData.uri) {
+      try {
+        const metadataJson = await fetchUriData(mintData.uri);
+        if (metadataJson && metadataJson.image) {
+          const imageUrl = metadataJson.image.trim();
+          if (imageUrl) {
+            // Send the image as a photo
+            await ctx.replyWithPhoto(imageUrl, {
+              caption: `🖼️ ${t('mint_data.token_image')}\n${mintData.name || t('mint_data.no_name')} (${mintData.symbol || t('mint_data.no_symbol')})`,
+              parse_mode: 'HTML',
+              reply_markup: Markup.inlineKeyboard([
+                [Markup.button.callback(t('buttons.back_to_main'), 'menu_main')]
+              ]).reply_markup,
+            });
+          }
+        }
+      } catch (imageError) {
+        console.log('Failed to fetch or display image:', imageError.message);
+        // Don't show error to user for image failures, just log it
+      }
+    }
 
     // Clean up user state
     mintDataStateManager.clearState(userId);

@@ -197,6 +197,7 @@
   "mint_data.metadata_symbol": "🔤 <b>Symbole des Métadonnées :</b> {symbol}",
   "mint_data.metadata_description": "📄 <b>Description :</b> {description}",
   "mint_data.metadata_image": "🖼️ <b>Image :</b> {image}",
+  "mint_data.token_image": "Image du Token",
   "mint_data.metadata_external_url": "🔗 <b>URL Externe :</b> {url}",
   "mint_data.metadata_attributes": "🏷️ <b>Attributs :</b> {attributes}",
   "mint_data.metadata_properties": "⚙️ <b>Propriétés :</b> {properties}",

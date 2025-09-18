@@ -248,6 +248,7 @@
   "mint_data.metadata_symbol": "🏷️ <b>符号：</b> {symbol}",
   "mint_data.metadata_description": "📄 <b>描述：</b> {description}",
   "mint_data.metadata_image": "🖼️ <b>图片：</b> {image}",
+  "mint_data.token_image": "代币图片",
   "mint_data.metadata_external_url": "🔗 <b>外部链接：</b> {url}",
   "mint_data.metadata_attributes": "🏷️ <b>属性：</b> {attributes}",
   "mint_data.metadata_properties": "⚙️ <b>特性：</b> {properties}",

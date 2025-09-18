@@ -250,6 +250,7 @@
   "mint_data.metadata_symbol": "🏷️ <b>Symbol:</b> {symbol}",
   "mint_data.metadata_description": "📄 <b>Description:</b> {description}",
   "mint_data.metadata_image": "🖼️ <b>Image:</b> {image}",
+  "mint_data.token_image": "Token Image",
   "mint_data.metadata_external_url": "🔗 <b>External URL:</b> {url}",
   "mint_data.metadata_attributes": "🏷️ <b>Attributes:</b> {attributes}",
   "mint_data.metadata_properties": "⚙️ <b>Properties:</b> {properties}",

@@ -197,6 +197,7 @@
   "mint_data.metadata_symbol": "🔤 <b>メタデータシンボル：</b> {symbol}",
   "mint_data.metadata_description": "📄 <b>説明：</b> {description}",
   "mint_data.metadata_image": "🖼️ <b>画像：</b> {image}",
+  "mint_data.token_image": "トークン画像",
   "mint_data.metadata_external_url": "🔗 <b>外部URL：</b> {url}",
   "mint_data.metadata_attributes": "🏷️ <b>属性：</b> {attributes}",
   "mint_data.metadata_properties": "⚙️ <b>プロパティ：</b> {properties}",
