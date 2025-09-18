@@ -11,6 +11,7 @@ import { registerRefundActions, handleRefundTextInput } from './src/commands/ref
 import { registerGetUrcActions, handleGetUrcTextInput } from './src/commands/getUrc';
 import { BOT_TOKEN, getInlineKeyboard } from './config';
 import { withI18n, SUPPORTED_LOCALES, LANGUAGE_NAMES, Locale } from './src/i18n/i18n';
+import { getUserNetwork, setUserNetwork } from './src/services/db';
 
 // Check if BOT_TOKEN is set
 if (!BOT_TOKEN) {
@@ -61,6 +62,24 @@ bot.start(async (ctx) => {
   await renderMainMenu(ctx);
 });
 
+// Settings menu
+bot.action('menu_settings', async (ctx) => {
+  const i18n = (ctx as any).i18n as { t: (k: string, p?: any) => string };
+  const t = i18n.t;
+  
+  const buttons = [
+    [{ text: t('buttons.language'), callback_data: 'menu_language' }],
+    [{ text: t('buttons.network'), callback_data: 'menu_network' }],
+    [{ text: t('buttons.back_to_main'), callback_data: 'menu_main' }]
+  ];
+  
+  await ctx.reply(t('settings.menu_title'), {
+    reply_markup: {
+      inline_keyboard: buttons,
+    },
+  });
+});
+
 // Language menu
 bot.action('menu_language', async (ctx) => {
   const i18n = (ctx as any).i18n as { t: (k: string, p?: any) => string };
@@ -69,9 +88,9 @@ bot.action('menu_language', async (ctx) => {
     { text: `${LANGUAGE_NAMES[loc]}`, callback_data: `set_lang_${loc}` },
   ]);
   
-  // Add close button
+  // Add back to settings button
   buttons.push([
-    { text: t('buttons.close'), callback_data: 'close_language_menu' }
+    { text: t('buttons.back_to_main'), callback_data: 'menu_settings' }
   ]);
   
   await ctx.reply(t('lang.menu_title'), {
@@ -92,14 +111,81 @@ bot.action(/^set_lang_(.+)$/, async (ctx) => {
   // Answer the callback query first
   await ctx.answerCbQuery(i18n.t('lang.updated'));
   
-  // Re-render main menu in the selected language by editing the current message
-  await renderMainMenu(ctx, true);
+  // Return to settings menu in the selected language
+  const t = i18n.t;
+  const buttons = [
+    [{ text: t('buttons.language'), callback_data: 'menu_language' }],
+    [{ text: t('buttons.network'), callback_data: 'menu_network' }],
+    [{ text: t('buttons.back_to_main'), callback_data: 'menu_main' }]
+  ];
+  
+  await ctx.editMessageText(t('settings.menu_title'), {
+    reply_markup: {
+      inline_keyboard: buttons,
+    },
+    parse_mode: 'HTML'
+  });
 });
 
-// Close language menu handler
-bot.action('close_language_menu', async (ctx) => {
-  await ctx.answerCbQuery();
-  await ctx.deleteMessage();
+// Network menu
+bot.action('menu_network', async (ctx) => {
+  const i18n = (ctx as any).i18n as { t: (k: string, p?: any) => string };
+  const t = i18n.t;
+  const userId = ctx.from?.id;
+  
+  if (!userId) return;
+  
+  const currentNetwork = getUserNetwork(userId);
+  
+  const buttons = [
+    [{ 
+      text: `${currentNetwork === 'devnet' ? '✅ ' : ''}${t('network.devnet')}`, 
+      callback_data: 'set_network_devnet' 
+    }],
+    [{ 
+      text: `${currentNetwork === 'mainnet' ? '✅ ' : ''}${t('network.mainnet')}`, 
+      callback_data: 'set_network_mainnet' 
+    }],
+    [{ text: t('buttons.back_to_main'), callback_data: 'menu_settings' }]
+  ];
+  
+  await ctx.reply(t('network.menu_title'), {
+    reply_markup: {
+      inline_keyboard: buttons,
+    },
+  });
+});
+
+// Set network handler
+bot.action(/^set_network_(.+)$/, async (ctx) => {
+  const match = ctx.match as RegExpMatchArray | null;
+  const network = match && match[1];
+  const userId = ctx.from?.id;
+  
+  if (!network || !userId || !['devnet', 'mainnet'].includes(network)) return;
+  
+  const i18n = (ctx as any).i18n as { t: (k: string, p?: any) => string };
+  const t = i18n.t;
+  
+  setUserNetwork(userId, network);
+  
+  // Answer the callback query first
+  const networkName = network === 'devnet' ? t('network.devnet') : t('network.mainnet');
+  await ctx.answerCbQuery(t('network.updated', { network: networkName }));
+  
+  // Return to settings menu
+  const buttons = [
+    [{ text: t('buttons.language'), callback_data: 'menu_language' }],
+    [{ text: t('buttons.network'), callback_data: 'menu_network' }],
+    [{ text: t('buttons.back_to_main'), callback_data: 'menu_main' }]
+  ];
+  
+  await ctx.editMessageText(t('settings.menu_title'), {
+    reply_markup: {
+      inline_keyboard: buttons,
+    },
+    parse_mode: 'HTML'
+  });
 });
 
 handleGenerateWallets(bot);

@@ -1,7 +1,7 @@
 import { Markup } from 'telegraf';
 import { PublicKey } from '@solana/web3.js';
 import { getMintData, GetMintDataResponse } from '@flipflop-sdk/node';
-import { RPC } from '../../config';
+import { getUserRpcUrl, getUserExplorerUrl } from '../utils/solana/rpc';
 import { UserStateManager, UserState } from '../utils/stateManager';
 import { ApiResponse } from '@flipflop-sdk/node/dist/raydium/types';
 
@@ -122,7 +122,7 @@ export async function handleMintDataAddressInput(ctx: any) {
   try {
     // Fetch mint data using FlipFlop SDK
     const response = await getMintData({
-      rpc: RPC,
+      rpc: getUserRpcUrl(userId),
       mint: new PublicKey(mintAddress)
     }) as ApiResponse<GetMintDataResponse>;
     
@@ -148,7 +148,7 @@ export async function handleMintDataAddressInput(ctx: any) {
     // Format the mint data for display
     const dataText = `${t('mint_data.data_title')}\n\n` +
       `${t('mint_data.mint_address')}\n<code>${mintAddress}</code>\n` +
-      `${t('mint_data.flipflop_url', { url: `https://${RPC.includes('devnet') ? 'test' : 'app'}.flipflop.plus/token/${mintAddress}` })}\n\n` +
+      `${t('mint_data.flipflop_url', { url: `https://${getUserRpcUrl(userId).includes('devnet') ? 'test' : 'app'}.flipflop.plus/token/${mintAddress}` })}\n\n` +
       `${t('mint_data.token_name')} ${mintData.name || t('mint_data.no_name')}\n` +
       `${t('mint_data.token_symbol')} ${mintData.symbol || t('mint_data.no_symbol')}\n` +
       `${t('mint_data.current_supply')} ${mintData.currentSupply?.toLocaleString() || 'N/A'}\n` +
@@ -157,7 +157,7 @@ export async function handleMintDataAddressInput(ctx: any) {
       `${t('mint_data.current_era')} ${mintData.currentEra || 'N/A'}\n` +
       `${t('mint_data.current_epoch')} ${mintData.currentEpoch || 'N/A'}`;
 
-    const explorerUrl = `https://explorer.solana.com/address/${mintAddress}${RPC.includes("devnet") ? "?cluster=devnet" : ""}`;
+    const explorerUrl = getUserExplorerUrl(userId, 'address', mintAddress);
 
     // Create buttons for copying important data
     const buttons = [

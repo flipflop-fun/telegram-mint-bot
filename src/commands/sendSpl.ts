@@ -1,9 +1,9 @@
 import { Markup } from 'telegraf';
-import { Connection, PublicKey, Keypair } from '@solana/web3.js';
-import { getAssociatedTokenAddress, createTransferInstruction, getAccount, getMint, createAssociatedTokenAccountInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { PublicKey, Keypair } from '@solana/web3.js';
+import { createTransferInstruction, getAssociatedTokenAddress, TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getMint, getAccount, createAssociatedTokenAccountInstruction } from '@solana/spl-token';
 import { getUserWallets } from '../services/db';
 import { createTransaction, sendTransaction } from '../utils/solana/transaction';
-import { RPC } from '../../config';
+import { getUserConnection, getUserExplorerUrl } from '../utils/solana/rpc';
 import bs58 from 'bs58';
 import { UserStateManager, UserState } from '../utils/stateManager';
 
@@ -294,7 +294,7 @@ async function handleSendSplConfirm(ctx: any) {
 
   try {
     // Create connection
-    const connection = new Connection(RPC, 'confirmed');
+    const connection = getUserConnection(userId);
     
     // Create keypair from private key
     const senderKeypair = Keypair.fromSecretKey(
@@ -385,7 +385,7 @@ async function handleSendSplConfirm(ctx: any) {
 
     const signature = await sendTransaction(connection, transaction, [senderKeypair]);
     
-    const explorerUrl = `https://explorer.solana.com/tx/${signature}${RPC.includes("devnet") ? "?cluster=devnet" : ""}`;
+    const explorerUrl = getUserExplorerUrl(userId, 'tx', signature);
 
     // Generate short ID for button callback
     const shortId = `spl_tx_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;

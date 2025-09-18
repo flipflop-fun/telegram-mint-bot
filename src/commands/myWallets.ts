@@ -284,6 +284,7 @@ export function handleWalletPagination(bot: any) {
     bot.action(/^balance_(.+)$/, async (ctx: any) => {
         const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
         const data = ctx.callbackQuery?.data || '';
+        const userId = ctx.from.id as number;
         const match = data.match(/^balance_(.+)$/);
         const address = match ? match[1] : '';
         if (!address) {
@@ -291,7 +292,7 @@ export function handleWalletPagination(bot: any) {
             return;
         }
         try {
-            const [result] = await fetchMultipleSolBalances([address]);
+            const [result] = await fetchMultipleSolBalances([address], userId);
             const amount = result ? result.solBalance : undefined;
             const display = typeof amount === 'number' ? amount.toFixed(4) : t('common.na');
             const message = `${t('labels.balance')}: ${display} ${t('units.sol')}`;

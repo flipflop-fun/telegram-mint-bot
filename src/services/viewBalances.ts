@@ -1,19 +1,17 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import Bottleneck from 'bottleneck';
-import { RPC } from '../../config';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { getUserWallets } from './db';
-
-// Use the RPC endpoint from config
-const connection = new Connection(RPC, 'confirmed');
+import { getUserConnection } from '../utils/solana/rpc';
 
 const limiter = new Bottleneck({
   minTime: 200, // Minimum time between requests (5 requests per second)
   maxConcurrent: 5, // Maximum concurrent requests
 });
 
-export async function fetchMultipleSolBalances(addresses: string[]): Promise<{ address: string; solBalance: number }[]> {
+export async function fetchMultipleSolBalances(addresses: string[], userId: number): Promise<{ address: string; solBalance: number }[]> {
   try {
+    const connection = getUserConnection(userId);
     const publicKeys = addresses.map((addr) => new PublicKey(addr));
     const accountsInfo = await limiter.schedule(() => connection.getMultipleAccountsInfo(publicKeys));
 
@@ -28,9 +26,11 @@ export async function fetchMultipleSolBalances(addresses: string[]): Promise<{ a
 }
 
 export async function fetchMultipleSplTokenBalances(
-  addresses: string[]
+  addresses: string[],
+  userId: number
 ): Promise<Record<string, { mint: string; balance: number; decimals: number }[]>> {
   try {
+    const connection = getUserConnection(userId);
     const results = await Promise.all(
       addresses.map(async (address) => {
         const publicKey = new PublicKey(address);
@@ -65,9 +65,11 @@ export async function fetchMultipleSplTokenBalances(
 }
 
 export async function fetchSingleSplTokenBalances(
-  address: string
+  address: string,
+  userId: number
 ): Promise<{ mint: string; balance: number; decimals: number }[]> {
   try {
+    const connection = getUserConnection(userId);
     const publicKey = new PublicKey(address);
     const tokenAccounts = await limiter.schedule(() =>
       connection.getParsedTokenAccountsByOwner(publicKey, {
@@ -102,9 +104,9 @@ export async function viewBalances(userId: number): Promise<
 
   const addresses = wallets.map((wallet) => wallet.address);
 
-  const solBalances = await fetchMultipleSolBalances(addresses);
+  const solBalances = await fetchMultipleSolBalances(addresses, userId);
 
-  const splBalances = await fetchMultipleSplTokenBalances(addresses);
+  const splBalances = await fetchMultipleSplTokenBalances(addresses, userId);
 
   const balances = solBalances.map(({ address, solBalance }) => ({
     address,
@@ -148,8 +150,9 @@ function parseTokenRefundData(data: Buffer): TokenRefundData {
   };
 }
 
-export const getRefundAccountData = async (owner: PublicKey, mint: PublicKey): Promise<TokenRefundData | null> => {
+export const getRefundAccountData = async (owner: PublicKey, mint: PublicKey, userId: number): Promise<TokenRefundData | null> => {
   try {
+    const connection = getUserConnection(userId);
     const [refundAccountPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("refund"), mint.toBuffer(), owner.toBuffer()],
       new PublicKey("FLipzZfErPUtDQPj9YrC6wp4nRRiVxRkFm3jdFmiPHJV"),
@@ -178,7 +181,8 @@ export const getRefundAccountData = async (owner: PublicKey, mint: PublicKey): P
   }
 }
 
-export const getMyTokenBalance = async (owner: PublicKey, mint: PublicKey) => {
+export const getMyTokenBalance = async (owner: PublicKey, mint: PublicKey, userId: number) => {
+  const connection = getUserConnection(userId);
   const ata = await getAssociatedTokenAddress(mint, owner, false);
   return await connection.getTokenAccountBalance(ata);
 }

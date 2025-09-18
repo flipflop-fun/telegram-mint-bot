@@ -1,6 +1,6 @@
 import { Markup } from 'telegraf';
 import { getUrcData, GetUrcDataResponse } from '@flipflop-sdk/node';
-import { RPC } from '../../config';
+import { getUserRpcUrl } from '../utils/solana/rpc';
 import { UserStateManager, UserState } from '../utils/stateManager';
 import { ApiResponse } from '@flipflop-sdk/node/dist/raydium/types';
 
@@ -115,7 +115,7 @@ async function handleUrcValueInput(ctx: any, userId: number, text: string, t: an
     try {
       // Fetch URC data using FlipFlop SDK
       const response = await getUrcData({
-        rpc: RPC,
+        rpc: getUserRpcUrl(userId),
         urc: text
       }) as ApiResponse<GetUrcDataResponse>;
       

@@ -24,7 +24,7 @@ export const getInlineKeyboard = (t: any) => [
         { text: t('buttons.refund'), callback_data: 'menu_refund' },
         { text: t('buttons.get_urc'), callback_data: 'menu_get_urc' },
     ], [
-        { text: t('buttons.language'), callback_data: 'menu_language' },
+        { text: t('buttons.settings'), callback_data: 'menu_settings' },
         { text: t('buttons.help'), callback_data: 'menu_help' },
     ],
 ]

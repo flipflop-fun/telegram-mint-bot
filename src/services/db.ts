@@ -179,7 +179,7 @@ function setUserLanguage(userId: number, lang: string): void {
     let error: Error | null = null;
     let completed = false;
     
-    db.run('INSERT OR REPLACE INTO user_settings (user_id, lang) VALUES (?, ?)', [userId, lang], function(err: Error | null) {
+    db.run('INSERT OR REPLACE INTO user_settings (user_id, lang, network) VALUES (?, ?, COALESCE((SELECT network FROM user_settings WHERE user_id = ?), \'mainnet\'))', [userId, lang, userId], function(err: Error | null) {
       if (err) {
         error = err;
       }
@@ -196,6 +196,57 @@ function setUserLanguage(userId: number, lang: string): void {
   }
 }
 
+// Network configuration functions
+function getUserNetwork(userId: number): string {
+  try {
+    let result: string = 'mainnet';
+    let error: Error | null = null;
+    let completed = false;
+    
+    db.get('SELECT network FROM user_settings WHERE user_id = ?', [userId], (err: Error | null, row: any) => {
+      if (err) {
+        error = err;
+      } else {
+        result = row?.network ?? 'mainnet';
+      }
+      completed = true;
+    });
+    
+    require('deasync').loopWhile(() => !completed);
+    
+    if (error) {
+      throw error;
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error getting user network:', error);
+    return 'mainnet';
+  }
+}
+
+function setUserNetwork(userId: number, network: string): void {
+  try {
+    let error: Error | null = null;
+    let completed = false;
+    
+    db.run('INSERT OR REPLACE INTO user_settings (user_id, lang, network) VALUES (?, COALESCE((SELECT lang FROM user_settings WHERE user_id = ?), \'en\'), ?)', [userId, userId, network], function(err: Error | null) {
+      if (err) {
+        error = err;
+      }
+      completed = true;
+    });
+    
+    require('deasync').loopWhile(() => !completed);
+    
+    if (error) {
+      throw error;
+    }
+  } catch (error) {
+    console.error('Error setting user network:', error);
+  }
+}
+
 // ensure tables exist
 const init = () => {
   try {
@@ -209,6 +260,7 @@ const init = () => {
     `);
     createWalletsTable.run();
 
+    // First, create user_settings table without network column for backward compatibility
     const createUserSettingsTable = db.prepare(`
       CREATE TABLE IF NOT EXISTS user_settings (
         user_id INTEGER PRIMARY KEY,
@@ -216,10 +268,47 @@ const init = () => {
       )
     `);
     createUserSettingsTable.run();
+    
+    // Add network column if it doesn't exist (for existing databases)
+    try {
+      // Check if network column exists first
+      let tableInfo: any[] = [];
+      let error: Error | null = null;
+      let completed = false;
+      
+      db.all(`PRAGMA table_info(user_settings)`, [], (err: Error | null, rows: any[]) => {
+        if (err) {
+          error = err;
+        } else {
+          tableInfo = rows || [];
+        }
+        completed = true;
+      });
+      
+      require('deasync').loopWhile(() => !completed);
+      
+      if (error) {
+        throw error;
+      }
+      
+      const hasNetworkColumn = tableInfo.some((column: any) => column.name === 'network');
+      
+      if (!hasNetworkColumn) {
+        db.run(`ALTER TABLE user_settings ADD COLUMN network TEXT DEFAULT 'mainnet'`, (err: Error | null) => {
+          if (err) {
+            console.error('Error adding network column:', err);
+          } else {
+            console.log('Added network column to user_settings table');
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error checking/adding network column:', error);
+    }
   } catch (error) {
     console.error('Error initializing database tables:', error);
   }
 };
 init();
 
-export { db, getUserWallets, removeWallet, getWalletCount, getWalletByAddress, saveWalletsToDatabase, getUserLanguage, setUserLanguage };
+export { db, getUserWallets, removeWallet, getWalletCount, getWalletByAddress, saveWalletsToDatabase, getUserLanguage, setUserLanguage, getUserNetwork, setUserNetwork };

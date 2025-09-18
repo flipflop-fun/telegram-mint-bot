@@ -2,7 +2,7 @@ import { Markup } from 'telegraf';
 import { Connection, PublicKey, SystemProgram, LAMPORTS_PER_SOL, Keypair } from '@solana/web3.js';
 import { getUserWallets } from '../services/db';
 import { createTransaction, sendTransaction } from '../utils/solana/transaction';
-import { RPC } from '../../config';
+import { getUserConnection, getUserExplorerUrl } from '../utils/solana/rpc';
 import bs58 from 'bs58';
 import { UserStateManager, UserState } from '../utils/stateManager';
 
@@ -242,7 +242,7 @@ async function handleSendSolConfirm(ctx: any) {
 
   try {
     // Create connection
-    const connection = new Connection(RPC, 'confirmed');
+    const connection = getUserConnection(userId);
     
     // Create keypair from private key
     const senderKeypair = Keypair.fromSecretKey(
@@ -306,7 +306,7 @@ async function handleSendSolConfirm(ctx: any) {
 
     const signature = await sendTransaction(connection, transaction, [senderKeypair]);
     
-    const explorerUrl = `https://explorer.solana.com/tx/${signature}${RPC.includes("devnet") ? "?cluster=devnet" : ""}`;
+    const explorerUrl = getUserExplorerUrl(userId, 'tx', signature);
 
     const shortId = `tx_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     transactionSignatures.set(shortId, signature);

@@ -1,6 +1,6 @@
 import { Markup } from 'telegraf';
 import { getUserWallets } from '../services/db';
-import { RPC } from '../../config';
+import { getUserRpcUrl, getUserExplorerUrl } from '../utils/solana/rpc';
 import { 
   mintToken, 
   loadKeypairFromBase58,
@@ -373,7 +373,7 @@ async function handleBatchMint(ctx: any) {
       
       try {
         const mintOptions: MintTokenOptions = {
-          rpc: RPC,
+          rpc: getUserRpcUrl(userId),
           mint: new PublicKey(mintAddress!),
           urc: urc!,
           minter,
@@ -398,7 +398,7 @@ async function handleBatchMint(ctx: any) {
             urc: urc
           });
           
-          const explorerUrl = `https://explorer.solana.com/tx/${mintResult.data.tx}${RPC.includes("devnet") ? "?cluster=devnet" : ""}`;
+          const explorerUrl = getUserExplorerUrl(userId, 'tx', mintResult.data.tx);
           
           // Store mint data for copy actions
           state.data.lastMintData = { mintAddress, signature: mintResult.data.tx };

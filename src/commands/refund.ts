@@ -1,6 +1,6 @@
 import { Markup } from 'telegraf';
 import { getUserWallets } from '../services/db';
-import { RPC } from '../../config';
+import { getUserRpcUrl } from '../utils/solana/rpc';
 import { PublicKey } from '@solana/web3.js';
 import { 
   getMintData, 
@@ -165,7 +165,7 @@ async function handleMintAddressInput(ctx: any, userId: number, text: string, t:
     try {
       // validating token existence with timeout handling
       const mintDataPromise = getMintData({
-        rpc: RPC,
+        rpc: getUserRpcUrl(userId),
         mint: mintPublicKey
       });
       // setting 30 seconds timeout
@@ -356,9 +356,9 @@ async function handleRefundConfirmation(ctx: any) {
     const refundWallet = state.data.selectedWallet;
     try {
       // Checking the balance of token before refund
-      const balance = await getMyTokenBalance(new PublicKey(refundWallet.address), new PublicKey(state.data.mintAddress));
+      const balance = await getMyTokenBalance(new PublicKey(refundWallet.address), new PublicKey(state.data.mintAddress), userId);
       // Get total mint amount
-      const refundData = await getRefundAccountData(new PublicKey(refundWallet.address), new PublicKey(state.data.mintAddress));
+      const refundData = await getRefundAccountData(new PublicKey(refundWallet.address), new PublicKey(state.data.mintAddress), userId);
       const totalMintedTokens = refundData.totalMintFee; // TODO: need to update the parsed data
       // console.log("balance", balance);
       // console.log("totalMintedTokens", totalMintedTokens);
@@ -372,7 +372,7 @@ async function handleRefundConfirmation(ctx: any) {
       const keypair = loadKeypairFromBase58(refundWallet.private_key);
       // Get token information with timeout
       const tokenInfoPromise = getMintData({
-        rpc: RPC,
+        rpc: getUserRpcUrl(userId),
         mint: new PublicKey(state.data.mintAddress)
       });
       const timeoutPromise = new Promise((_, reject) => {
@@ -386,7 +386,7 @@ async function handleRefundConfirmation(ctx: any) {
       const tokenInfo = tokenResponse.data;
       // Execute the actual refund using flipflop SDK with timeout
       const refundPromise = refundToken({
-        rpc: RPC,
+        rpc: getUserRpcUrl(userId),
         mint: new PublicKey(state.data.mintAddress),
         owner: keypair
       });

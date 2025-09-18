@@ -11,6 +11,8 @@
   "buttons.send_spl": "🪙 發送SPL",
   "buttons.help": "ℹ️ 幫助",
   "buttons.language": "🌐 語言",
+  "buttons.settings": "⚙️ 設定",
+  "buttons.network": "🌐 網路",
   "buttons.back_to_main": "🔙 返回主選單",
   "buttons.close": "❌ 關閉",
   "buttons.previous": "⬅️ 上一頁",
@@ -188,6 +190,11 @@
   "errors.spl_program_error": "❌ 由於 SPL Token 程序錯誤，交易失敗。請確保接收錢包有效且代幣數量正確。",
   "lang.menu_title": "🌐 選擇你的語言：",
   "lang.updated": "✅ 語言已更新。",
+  "settings.menu_title": "⚙️ 設定",
+  "network.menu_title": "🌐 網路設定",
+  "network.devnet": "開發網路 (Devnet)",
+  "network.mainnet": "主網路 (Mainnet)",
+  "network.updated": "✅ 網路已更新。",
   "mint_data.title": "📊 <b>代幣數據</b>\n\n查看任意代幣的詳細資訊：",
   "mint_data.enter_mint_address": "請輸入代幣合約地址（Mint Address）：",
   "mint_data.processing": "⏳ 正在獲取代幣數據，請稍候...",
@@ -265,6 +272,7 @@
   "mint_data.value_none": "無",
   "mint_data.value_yes": "是",
   "mint_data.value_no": "否",
+  "mint_data.not_found": "❌ 未找到代幣，請驗證地址。",
   "mint_data.copy_mint_feedback": "📋 代幣地址已複製：{address}",
   "buttons.check_another": "🔄 查看其他代幣",
   "buttons.try_again": "🔄 重試",
@@ -286,3 +294,4 @@
   "get_urc.usage_count": "使用次數",
   "get_urc.copy_code": "📋 複製代碼"
 }
+ 
