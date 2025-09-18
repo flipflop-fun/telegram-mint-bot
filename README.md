@@ -55,7 +55,6 @@ A powerful Telegram bot for Solana blockchain operations, built with TypeScript 
    ```env
    BOT_TOKEN=your_telegram_bot_token_here
    DB_ENCRYPTION_KEY=your_secure_encryption_key_here
-   NETWORK=mainnet
    MAINNET_RPC=https://api.mainnet-beta.solana.com
    DEVNET_RPC=https://api.devnet.solana.com
    DB_FILE=src/data/wallets.db
@@ -90,7 +89,6 @@ A powerful Telegram bot for Solana blockchain operations, built with TypeScript 
 |----------|-------------|---------|----------|
 | `BOT_TOKEN` | Telegram Bot Token from BotFather | - | ✅ |
 | `DB_ENCRYPTION_KEY` | Database encryption key | `default-encryption-key-change-in-production` | ⚠️ |
-| `NETWORK` | Solana network (`mainnet` or `devnet`) | `mainnet` | ❌ |
 | `MAINNET_RPC` | Mainnet RPC endpoint | `https://api.mainnet-beta.solana.com` | ❌ |
 | `DEVNET_RPC` | Devnet RPC endpoint | `https://api.devnet.solana.com` | ❌ |
 | `DB_FILE` | Database file path | `src/data/wallets.db` | ❌ |

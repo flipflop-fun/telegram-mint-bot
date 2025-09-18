@@ -8,7 +8,6 @@ export const DB_FILE: string = process.env.DB_FILE || path.join(process.cwd(), '
 export const DB_ENCRYPTION_KEY: string = process.env.DB_ENCRYPTION_KEY || 'default-encryption-key-change-in-production';
 export const MAINNET: string = process.env.MAINNET_RPC || 'https://api.mainnet-beta.solana.com';
 export const DEVNET: string = process.env.DEVNET_RPC || 'https://api.devnet.solana.com';
-export const RPC: string = process.env.NETWORK === 'devnet' ? DEVNET : MAINNET;
 
 export const getInlineKeyboard = (t: any) => [
     [
