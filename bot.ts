@@ -231,7 +231,7 @@ bot.on('text', async (ctx: any) => {
 bot.action('menu_main', (ctx) => handleBackToMainMenu(ctx));
 
 // Log that the bot is starting
-console.log('✅ Solmate is successfully running!');
+console.log('✅ Flipflop Mint Bot is successfully running!');
 
 // Launch the bot
 bot.launch().catch((error) => {

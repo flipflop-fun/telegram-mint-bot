@@ -132,16 +132,29 @@ function getWalletByAddress(address: string): { private_key: string } | null {
 
 function saveWalletsToDatabase(wallets: { publicKey: string; privateKey: string }[], telegramUserId: number): void {
   try {
-    const insertStmt = db.prepare('INSERT INTO wallets (address, private_key, user_id) VALUES (?, ?, ?)');
-    const insertMany = db.transaction((ws: { publicKey: string; privateKey: string }[]) => {
-      for (const wallet of ws) {
+    // Start transaction manually
+    db.run('BEGIN TRANSACTION');
+    
+    try {
+      // Prepare statement for inserting wallets
+      const insertStmt = db.prepare('INSERT INTO wallets (address, private_key, user_id) VALUES (?, ?, ?)');
+      
+      // Insert each wallet
+      for (const wallet of wallets) {
         insertStmt.run(wallet.publicKey, wallet.privateKey, telegramUserId);
       }
-    });
-    insertMany(wallets);
-    console.log(`Saved ${wallets.length} wallets to the database for user ${telegramUserId}.`);
+      
+      // Commit transaction
+      db.run('COMMIT');
+      console.log(`Saved ${wallets.length} wallets to the database for user ${telegramUserId}.`);
+    } catch (error) {
+      // Rollback on error
+      db.run('ROLLBACK');
+      throw error;
+    }
   } catch (error) {
     console.error('Error saving wallets to database:', error);
+    throw error;
   }
 }
 

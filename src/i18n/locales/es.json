@@ -1,5 +1,5 @@
 {
-  "welcome": "👋 Bienvenido a tu SolMate",
+  "welcome": "👋 Bienvenido a tu Flipflop Mint Bot",
   "main_menu.title": "📋 <b>Menú principal</b>\n\n",
   "main_menu.desc": "Usa los botones abajo para navegar por las funciones disponibles:",
   "buttons.generate_wallets": "💳 Generar Carteras",
@@ -22,7 +22,7 @@
   "buttons.add_new_wallet": "➕ Añadir monedero",
   "buttons.view_all_tokens": "🔍 Tokens SPL",
   "buttons.remove": "🗑️ Eliminar",
-  "help.text": "ℹ️ <b>Cómo usar SolMate:</b>\n\n1️⃣ Usa '💳 Generar monederos' para crear monederos.\n2️⃣ Usa '📜 Mis monederos' para gestionar monederos.\n3️⃣ Usa '🪙 Acuñar tokens' para crear nuevos tokens.\n4️⃣ Usa '💰 Reembolso' para procesar reembolsos.\n\n⚠️ <b>Consejos de seguridad:</b>\n\n🔒 Mantén las claves privadas seguras.\n💾 Guarda los archivos .txt de forma segura.\n🗑️ Elimina los archivos .txt del historial de chat.",
+  "help.text": "ℹ️ <b>Cómo usar Flipflop Mint Bot:</b>\n\n<b>💳 Gestión de Carteras:</b>\n• Generar Carteras - Crear nuevas carteras de Solana\n• Mis Carteras - Ver y gestionar carteras existentes\n\n<b>🪙 Operaciones de Tokens:</b>\n• Acuñar Tokens - Crear nuevos tokens\n• Datos de Token - Ver información detallada de tokens\n\n<b>💸 Funciones de Transferencia:</b>\n• Enviar SOL - Transferir tokens SOL\n• Enviar SPL - Transferir tokens SPL\n\n<b>🔧 Otras Funciones:</b>\n• Reembolso - Procesar operaciones de reembolso\n• Obtener Info URC - Recuperar datos relacionados con URC\n• Configuración - Configurar idioma y red\n\n⚠️ <b>Recordatorios de Seguridad:</b>\n🔒 Mantén tus claves privadas seguras\n💾 Guarda los archivos de cartera de forma segura\n🗑️ Elimina información sensible del chat",
   "generate.select_number": "Selecciona la cantidad de monederos a generar:",
   "generate.1_wallet": "1 Monedero 💳",
   "generate.5_wallets": "5 Monederos 💳",

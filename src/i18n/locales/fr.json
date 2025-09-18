@@ -1,5 +1,5 @@
 {
-  "welcome": "👋 Bienvenue sur votre SolMate",
+  "welcome": "👋 Bienvenue sur votre Flipflop Mint Bot",
   "main_menu.title": "📋 <b>Menu principal</b>\n\n",
   "main_menu.desc": "Utilisez les boutons ci-dessous pour naviguer parmi les fonctionnalités disponibles :",
   "buttons.generate_wallets": "💳 Générer des portefeuilles",
@@ -22,7 +22,7 @@
   "buttons.add_new_wallet": "➕ Ajouter un portefeuille",
   "buttons.view_all_tokens": "🔍 Tokens SPL",
   "buttons.remove": "🗑️ Supprimer",
-  "help.text": "ℹ️ <b>Comment utiliser SolMate :</b>\n\n1️⃣ Utilisez '💳 Générer des portefeuilles' pour créer des portefeuilles.\n2️⃣ Utilisez '📜 Mes portefeuilles' pour gérer les portefeuilles.\n3️⃣ Utilisez '🪙 Frapper des tokens' pour créer de nouveaux tokens.\n4️⃣ Utilisez '💰 Remboursement' pour traiter les remboursements.\n\n⚠️ <b>Conseils de sécurité :</b>\n\n🔒 Gardez les clés privées en sécurité.\n💾 Sauvegardez les fichiers .txt en sécurité.\n🗑️ Supprimez les fichiers .txt de l'historique de chat.",
+  "help.text": "ℹ️ <b>Comment utiliser Flipflop Mint Bot :</b>\n\n<b>💳 Gestion des Portefeuilles :</b>\n• Générer des Portefeuilles - Créer de nouveaux portefeuilles Solana\n• Mes Portefeuilles - Voir et gérer les portefeuilles existants\n\n<b>🪙 Opérations de Jetons :</b>\n• Frapper des Jetons - Créer de nouveaux jetons\n• Données de Token - Voir les informations détaillées des jetons\n\n<b>💸 Fonctions de Transfert :</b>\n• Envoyer SOL - Transférer des jetons SOL\n• Envoyer SPL - Transférer des jetons SPL\n\n<b>🔧 Autres Fonctionnalités :</b>\n• Remboursement - Traiter les opérations de remboursement\n• Obtenir Info URC - Récupérer les données liées à URC\n• Paramètres - Configurer la langue et le réseau\n\n⚠️ <b>Rappels de Sécurité :</b>\n🔒 Gardez vos clés privées sécurisées\n💾 Sauvegardez les fichiers de portefeuille en sécurité\n🗑️ Supprimez les informations sensibles du chat",
   "generate.select_number": "Sélectionnez le nombre de portefeuilles à générer :",
   "generate.1_wallet": "1 Portefeuille 💳",
   "generate.5_wallets": "5 Portefeuilles 💳",

@@ -1,7 +1,7 @@
 import { Markup } from 'telegraf';
 import { getUserWallets } from '../services/db';
 import { getUserRpcUrl } from '../utils/solana/rpc';
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { 
   getMintData, 
   GetMintDataResponse, 
@@ -12,6 +12,26 @@ import {
 import { UserStateManager, UserState } from '../utils/stateManager';
 import { getMyTokenBalance, getRefundAccountData } from '../services/viewBalances';
 import { ApiResponse } from '@flipflop-sdk/node/dist/raydium/types';
+import Decimal from 'decimal.js';
+
+// Utility function to convert lamports to SOL with precise BigDecimal arithmetic
+function formatLamportsToSol(lamports: number | string | bigint): string {
+  try {
+    // Convert input to Decimal for precise arithmetic
+    const lamportsDecimal = new Decimal(lamports.toString());
+    const lamportsPerSolDecimal = new Decimal(LAMPORTS_PER_SOL.toString());
+    
+    // Perform precise division
+    const sol = lamportsDecimal.dividedBy(lamportsPerSolDecimal);
+    
+    // Format to 9 decimal places (Solana's precision)
+    return `${sol.toString()} SOL`;
+  } catch (error) {
+    // Fallback for invalid inputs
+    console.error('Error formatting lamports to SOL:', error);
+    return `${lamports.toString()} Lamports`;
+  }
+}
 
 // defining refund process state type
 interface RefundState extends UserState {
@@ -357,6 +377,9 @@ async function handleRefundConfirmation(ctx: any) {
     try {
       // Checking the balance of token before refund
       const balance = await getMyTokenBalance(new PublicKey(refundWallet.address), new PublicKey(state.data.mintAddress), userId);
+      if (balance.value.amount === "0") {
+        throw new Error("Balance is 0");
+      }
       // Get total mint amount
       const refundData = await getRefundAccountData(new PublicKey(refundWallet.address), new PublicKey(state.data.mintAddress), userId);
       const totalMintedTokens = refundData.totalMintFee; // TODO: need to update the parsed data
@@ -364,8 +387,8 @@ async function handleRefundConfirmation(ctx: any) {
       // console.log("totalMintedTokens", totalMintedTokens);
       if (totalMintedTokens.toString() !== balance.value.amount.toString()) {
         throw new Error(t('refund.minted_amount_mismatch', {
-          mintedAmount: totalMintedTokens.toString() + " Lamports",
-          walletBalance: balance.value.amount.toString() + " Lamports"
+          mintedAmount: formatLamportsToSol(totalMintedTokens),
+          walletBalance: formatLamportsToSol(balance.value.amount)
         }));
       }
       // Load keypair with error handling

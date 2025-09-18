@@ -1,5 +1,5 @@
 {
-  "welcome": "👋 SolMateへようこそ",
+  "welcome": "👋 Flipflop Mint Botへようこそ",
   "main_menu.title": "📋 <b>メインメニュー</b>\n\n",
   "main_menu.desc": "以下のボタンを使用して利用可能な機能をナビゲートしてください：",
   "buttons.generate_wallets": "💳 ウォレット生成",
@@ -22,7 +22,7 @@
   "buttons.add_new_wallet": "➕ 新しいウォレットを追加",
   "buttons.view_all_tokens": "🔍 SPLトークン",
   "buttons.remove": "🗑️ 削除",
-  "help.text": "ℹ️ <b>SolMateの使い方：</b>\n\n1️⃣ '💳 ウォレット生成'でウォレットを作成。\n2️⃣ '📜 マイウォレット'でウォレットを管理。\n3️⃣ '🪙 トークン発行'で新しいトークンを作成。\n4️⃣ '💰 返金'で返金処理を行う。\n\n⚠️ <b>セキュリティのヒント：</b>\n\n🔒 秘密鍵を安全に保管。\n💾 .txtファイルを安全に保存。\n🗑️ チャット履歴から.txtファイルを削除。",
+  "help.text": "ℹ️ <b>Flipflop Mint Botの使い方：</b>\n\n<b>💳 ウォレット管理：</b>\n• ウォレット生成 - 新しいSolanaウォレットを作成\n• マイウォレット - 既存のウォレットを表示・管理\n\n<b>🪙 トークン操作：</b>\n• トークン鋳造 - 新しいトークンを作成\n• トークンデータ - トークンの詳細情報を表示\n\n<b>💸 転送機能：</b>\n• SOL送信 - SOLトークンを転送\n• SPL送信 - SPLトークンを転送\n\n<b>🔧 その他の機能：</b>\n• 返金 - 返金操作を処理\n• URC情報取得 - URC関連データを取得\n• 設定 - 言語とネットワークを設定\n\n⚠️ <b>安全性のリマインダー：</b>\n🔒 秘密鍵を安全に保管\n💾 ウォレットファイルを安全に保存\n🗑️ チャットから機密情報を削除",
   "generate.select_number": "生成するウォレット数を選択してください：",
   "generate.1_wallet": "1ウォレット 💳",
   "generate.5_wallets": "5ウォレット 💳",

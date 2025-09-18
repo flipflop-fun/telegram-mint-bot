@@ -259,9 +259,9 @@ export async function handleSplAmountInput(ctx: any) {
       //   Markup.button.callback(t('buttons.copy_sender'), `copy_spl_sender_${userState.data.senderWallet!.address}`),
       //   Markup.button.callback(t('buttons.copy_recipient'), `copy_spl_recipient_${userState.data.recipientAddress}`)
       // ],
-      [
-        Markup.button.callback(t('buttons.copy_token'), `copy_spl_token_${userState.data.tokenMint}`)
-      ],
+      // [
+      //   Markup.button.callback(t('buttons.copy_token'), `copy_spl_token_${userState.data.tokenMint}`)
+      // ],
       [
         Markup.button.callback(t('buttons.confirm_transfer'), 'send_spl_confirm'),
         Markup.button.callback(t('buttons.cancel'), 'menu_main')

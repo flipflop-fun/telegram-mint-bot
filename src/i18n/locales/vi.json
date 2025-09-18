@@ -1,5 +1,5 @@
 {
-  "welcome": "👋 Chào mừng đến với SolMate",
+  "welcome": "👋 Chào mừng đến với Flipflop Mint Bot",
   "main_menu.title": "📋 <b>Menu Chính</b>\n\n",
   "main_menu.desc": "Sử dụng các nút bên dưới để điều hướng các tính năng có sẵn:",
   "buttons.generate_wallets": "💳 Tạo Ví",
@@ -22,7 +22,7 @@
   "buttons.add_new_wallet": "➕ Thêm Ví Mới",
   "buttons.view_all_tokens": "🔍 Token SPL",
   "buttons.remove": "🗑️ Xóa",
-  "help.text": "ℹ️ <b>Cách sử dụng SolMate:</b>\n\n1️⃣ Sử dụng '💳 Tạo ví' để tạo ví.\n2️⃣ Sử dụng '📜 Ví của tôi' để quản lý ví.\n3️⃣ Sử dụng '🪙 Tạo token' để tạo token mới.\n4️⃣ Sử dụng '💰 Hoàn tiền' để xử lý hoàn tiền.\n\n⚠️ <b>Lời khuyên bảo mật:</b>\n\n🔒 Giữ khóa riêng an toàn.\n💾 Lưu file .txt an toàn.\n🗑️ Xóa file .txt khỏi lịch sử chat.",
+  "help.text": "ℹ️ <b>Cách sử dụng Flipflop Mint Bot:</b>\n\n<b>💳 Quản Lý Ví:</b>\n• Tạo Ví - Tạo ví Solana mới\n• Ví Của Tôi - Xem và quản lý ví hiện có\n\n<b>🪙 Thao Tác Token:</b>\n• Tạo Token - Tạo token mới\n• Dữ Liệu Token - Xem thông tin chi tiết token\n\n<b>💸 Chức Năng Chuyển Tiền:</b>\n• Gửi SOL - Chuyển token SOL\n• Gửi SPL - Chuyển token SPL\n\n<b>🔧 Tính Năng Khác:</b>\n• Hoàn Tiền - Xử lý các thao tác hoàn tiền\n• Lấy Thông Tin URC - Lấy dữ liệu liên quan đến URC\n• Cài Đặt - Cấu hình ngôn ngữ và mạng\n\n⚠️ <b>Lời Nhắc An Toàn:</b>\n🔒 Giữ khóa riêng của bạn an toàn\n💾 Lưu tệp ví một cách an toàn\n🗑️ Xóa thông tin nhạy cảm khỏi cuộc trò chuyện",
   "generate.select_number": "Chọn số lượng ví để tạo:",
   "generate.1_wallet": "1 Ví 💳",
   "generate.5_wallets": "5 Ví 💳",

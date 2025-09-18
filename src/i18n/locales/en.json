@@ -1,5 +1,5 @@
 {
-  "welcome": "👋 Welcome to your SolMate",
+  "welcome": "👋 Welcome to your Flipflop Mint Bot",
   "main_menu.title": "📋 <b>Main Menu</b>\n\n",
   "main_menu.desc": "Use the buttons below to navigate through the available features:",
   "buttons.generate_wallets": "💳 Generate Wallets",
@@ -22,7 +22,7 @@
   "buttons.view_all_tokens": "🔍 SPL Tokens",
   "buttons.remove": "🗑️ Remove",
   "buttons.mint_data": "ℹ️ Token Data",
-  "help.text": "ℹ️ <b>How to Use Your Solmate:</b>\n\n1️⃣ Use \"💳 Generate Wallets\" to create wallets.\n2️⃣ Use \"📜 My Wallets\" to manage wallets.\n3️⃣ Use \"🪙 Mint Tokens\" to mint new tokens.\n4️⃣ Use \"💰 Refund\" to process refunds.\n\n⚠️ <b>Safety Reminders:</b>\n\n🔒 Keep your private keys private.\n💾 Save your .txt file securely.\n🗑️ Delete the .txt file from the chat history for security.",
+  "help.text": "ℹ️ <b>How to Use Flipflop Mint Bot:</b>\n\n<b>💳 Wallet Management:</b>\n• Generate Wallets - Create new Solana wallets\n• My Wallets - View and manage existing wallets\n\n<b>🪙 Token Operations:</b>\n• Mint Tokens - Create new tokens\n• Token Data - View detailed token information\n\n<b>💸 Transfer Functions:</b>\n• Send SOL - Transfer SOL tokens\n• Send SPL - Transfer SPL tokens\n\n<b>🔧 Other Features:</b>\n• Refund - Process refund operations\n• Get URC Info - Retrieve URC-related data\n• Settings - Configure language and network\n\n⚠️ <b>Safety Reminders:</b>\n🔒 Keep your private keys secure\n💾 Save wallet files safely\n🗑️ Delete sensitive information from chat",
   "generate.select_number": "Select the number of wallets to generate:",
   "generate.1_wallet": "1 Wallet 💳",
   "generate.5_wallets": "5 Wallets 💳",
