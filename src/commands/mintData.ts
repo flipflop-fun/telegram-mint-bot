@@ -151,11 +151,23 @@ export async function handleMintDataAddressInput(ctx: any) {
       `${t('mint_data.flipflop_url', { url: `https://${getUserRpcUrl(userId).includes('devnet') ? 'test' : 'app'}.flipflop.plus/token/${mintAddress}` })}\n\n` +
       `${t('mint_data.token_name')} ${mintData.name || t('mint_data.no_name')}\n` +
       `${t('mint_data.token_symbol')} ${mintData.symbol || t('mint_data.no_symbol')}\n` +
-      `${t('mint_data.current_supply')} ${mintData.currentSupply?.toLocaleString() || 'N/A'}\n` +
-      `${t('mint_data.max_supply')} ${mintData.maxSupply ? mintData.maxSupply.toLocaleString() : t('mint_data.unlimited')}\n\n` +
-      `${t('mint_data.admin')} ${mintData.admin ? `<code>${mintData.admin}</code>` : t('mint_data.no_authority')}\n` +
-      `${t('mint_data.current_era')} ${mintData.currentEra || 'N/A'}\n` +
-      `${t('mint_data.current_epoch')} ${mintData.currentEpoch || 'N/A'}`;
+      `${t('mint_data.metadata_uri')} ${mintData.uri}\n` +
+      `${t('mint_data.admin')} ${mintData.admin ? `<code>${mintData.admin}</code>` : t('mint_data.no_authority')}\n\n` +
+
+      `${t('mint_data.current_supply')} ${mintData.currentSupply?.toLocaleString()} ${mintData.symbol || t('mint_data.no_symbol')}\n` +
+      `${t('mint_data.max_supply')} ${mintData.maxSupply ? mintData.maxSupply.toLocaleString() : t('mint_data.unlimited')} ${mintData.symbol || t('mint_data.no_symbol')}\n` +
+      `${t('mint_data.supply_rate')} ${(mintData.currentSupply / mintData.maxSupply * 100).toFixed(2)}%\n` +
+
+      `${t('mint_data.initial_mint_size')} ${mintData.initialMintSize} ${mintData.symbol || t('mint_data.no_symbol')}\n` +
+      `${t('mint_data.mint_size_epoch')} ${mintData.mintSizeEpoch} ${mintData.symbol || t('mint_data.no_symbol')}\n` +
+      `${t('mint_data.difficulty_coefficient')} ${mintData.difficultyCoefficient}\n` +
+      `${t('mint_data.fee_rate')} ${mintData.feeRate} SOL\n` +
+      `${t('mint_data.target_eras')} ${mintData.targetEras || 'N/A'}\n` +
+      `${t('mint_data.current_era')} ${mintData.currentEra - 1}\n` +
+      `${t('mint_data.current_epoch')} ${mintData.currentEpoch || 'N/A'}\n` +
+      `${t('mint_data.target_seconds_per_epoch')} ${mintData.targetSecondsPerEpoch} Seconds\n` +
+      `${t('mint_data.token_vault_balance')} ${mintData.tokenVaultBalance} ${mintData.symbol || t('mint_data.no_symbol')}\n` +
+      `${t('mint_data.wsol_vault_balance')} ${mintData.wsolVaultBalance} SOL`;
 
     const explorerUrl = getUserExplorerUrl(userId, 'address', mintAddress);
 

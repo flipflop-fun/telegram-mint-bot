@@ -241,6 +241,7 @@
   "mint_data.token_address": "📍 <b>代幣地址：</b> <code>{address}</code>",
   "mint_data.token_decimals": "🔢 <b>小數位數：</b> {decimals}",
   "mint_data.token_supply": "📊 <b>代幣供應量：</b> {supply}",
+  "mint_data.supply_rate": "📈 <b>供應量占比：</b>",
   "mint_data.creation_slot": "🏗️ <b>創建槽位：</b> {slot}",
   "mint_data.metadata_title": "📋 <b>元數據資訊</b>",
   "mint_data.metadata_name": "📛 <b>名稱：</b> {name}",
@@ -274,6 +275,14 @@
   "mint_data.value_no": "否",
   "mint_data.not_found": "❌ 未找到代幣，請驗證地址。",
   "mint_data.copy_mint_feedback": "📋 代幣地址已複製：{address}",
+  "mint_data.metadata_uri": "🔗 <b>元數據URI：</b>",
+  "mint_data.initial_mint_size": "🎯 <b>初始鑄造大小：</b>",
+  "mint_data.mint_size_epoch": "📅 <b>鑄造大小紀元：</b>",
+  "mint_data.difficulty_coefficient": "⚡ <b>難度係數：</b>",
+  "mint_data.target_eras": "🎯 <b>目標時代：</b>",
+  "mint_data.target_seconds_per_epoch": "⏱️ <b>每紀元目標秒數：</b>",
+  "mint_data.token_vault_balance": "🏦 <b>代幣金庫餘額：</b>",
+  "mint_data.wsol_vault_balance": "💰 <b>WSOL金庫餘額：</b>",
   "buttons.check_another": "🔄 查看其他代幣",
   "buttons.try_again": "🔄 重試",
   "send.error_blockhash": "❌ 交易失敗：網路擁堵，請稍後重試。\n\n錯誤詳情：{error}",
@@ -294,4 +303,3 @@
   "get_urc.usage_count": "使用次數",
   "get_urc.copy_code": "📋 複製代碼"
 }
- 
