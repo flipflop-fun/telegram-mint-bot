@@ -543,7 +543,6 @@ export function registerRefundActions(bot: any) {
 
     const selectedWallet = wallets[walletIndex];
     
-    // 更新状态并直接跳转到确认
     refundStateManager.updateState(userId, {
       step: 'confirm_refund',
       data: {
@@ -552,7 +551,6 @@ export function registerRefundActions(bot: any) {
       }
     });
     
-    // 显示确认消息
     await ctx.editMessageText(
       t('refund.confirm_refund', { 
         mintAddress: state.data?.mintAddress,

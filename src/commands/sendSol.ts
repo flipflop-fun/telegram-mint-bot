@@ -308,7 +308,6 @@ async function handleSendSolConfirm(ctx: any) {
     
     const explorerUrl = `https://explorer.solana.com/tx/${signature}${RPC.includes("devnet") ? "?cluster=devnet" : ""}`;
 
-    // 生成短ID用于按钮回调，避免超过64字节限制
     const shortId = `tx_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
     transactionSignatures.set(shortId, signature);
 
@@ -319,7 +318,6 @@ async function handleSendSolConfirm(ctx: any) {
       `${t('send.transaction_hash')}\n<code>${signature}</code>\n\n` +
       `${t('send.transaction_submitted')}`;
 
-    // 显示成功消息
     await ctx.editMessageText(successText, {
       parse_mode: 'HTML',
       reply_markup: Markup.inlineKeyboard([
@@ -330,12 +328,10 @@ async function handleSendSolConfirm(ctx: any) {
         [Markup.button.callback(t('buttons.back_to_main_home'), 'menu_main')]
       ]).reply_markup,
     });
-    // 清理用户状态
     sendSolStateManager.clearState(userId);
   } catch (error) {
     let errorMessage = '';
     
-    // 根据错误类型提供更准确的错误消息
     if (error.message && error.message.includes('insufficient funds')) {
       errorMessage = t('errors.insufficient_funds_sol');
     } else if (error.message && error.message.includes('blockhash')) {
@@ -359,48 +355,10 @@ async function handleSendSolConfirm(ctx: any) {
 }
 
 /**
- * Handle copy actions
- */
-// async function handleCopyAction(ctx: any) {
-//   const data = ctx.callbackQuery?.data;
-  
-//   if (!data) return;
-
-//   let copyText = '';
-//   let message = '';
-
-//   const t = (ctx as any).i18n?.t?.bind((ctx as any).i18n) || ((k: string, p?: any) => k);
-
-//   if (data.startsWith('copy_sender_')) {
-//     copyText = data.replace('copy_sender_', '');
-//     message = `${t('copy.sender_copied')}\n<code>${copyText}</code>`;
-//   } else if (data.startsWith('copy_recipient_')) {
-//     copyText = data.replace('copy_recipient_', '');
-//     message = `${t('copy.recipient_copied')}\n<code>${copyText}</code>`;
-//   } else if (data.startsWith('copy_tx_')) {
-//     const shortId = data.replace('copy_tx_', '');
-//     const fullSignature = transactionSignatures.get(shortId);
-//     if (fullSignature) {
-//       copyText = fullSignature;
-//       message = `${t('copy.tx_copied')}\n<code>${copyText}</code>`;
-//       // 清理临时存储
-//       transactionSignatures.delete(shortId);
-//     } else {
-//       message = t('send.error_signature_expired');
-//     }
-//   }
-
-//   if (message) {
-//     await ctx.answerCbQuery(message, { show_alert: true });
-//   }
-// }
-
-/**
  * Register send SOL actions
  */
 export function registerSendSolActions(bot: any) {
   bot.action('menu_send_sol', handleSendSol);
   bot.action(/^send_sol_select_(\d+)$/, handleSendSolSelectSender);
   bot.action('send_sol_confirm', handleSendSolConfirm);
-  // bot.action(/^copy_(sender|recipient|tx)_/, handleCopyAction);
 }

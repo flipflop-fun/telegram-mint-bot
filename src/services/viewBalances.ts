@@ -1,13 +1,11 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import Database from 'better-sqlite3';
 import Bottleneck from 'bottleneck';
-import { RPC, DB_FILE } from '../../config';
+import { RPC } from '../../config';
 import { getAssociatedTokenAddress } from '@solana/spl-token';
 import { getUserWallets } from './db';
 
 // Use the RPC endpoint from config
 const connection = new Connection(RPC, 'confirmed');
-const db = new Database(DB_FILE);
 
 const limiter = new Bottleneck({
   minTime: 200, // Minimum time between requests (5 requests per second)
@@ -117,7 +115,6 @@ export async function viewBalances(userId: number): Promise<
   return balances;
 }
 
-// 定义 TokenRefundData 接口
 interface TokenRefundData {
   owner: PublicKey;
   totalTokens: bigint;
@@ -163,7 +160,6 @@ export const getRefundAccountData = async (owner: PublicKey, mint: PublicKey): P
       return null;
     }
     
-    // 解析账户数据
     const parsedData = parseTokenRefundData(refundAccountData.data);
     
     // console.log('Parsed refund account data:', {
